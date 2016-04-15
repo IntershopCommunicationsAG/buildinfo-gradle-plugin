@@ -182,6 +182,36 @@ publishing {
 }
 
 publish.dependsOn asciidoctor
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    pkg {
+        repo = 'maven'
+        name = project.name
+        userOrg = 'intershopcommunicationsag'
+
+        licenses = ['Apache-2.0']
+        vcsUrl = "https://github.com/IntershopCommunicationsAG/${project.name}"
+
+        desc = project.description
+        websiteUrl = "https://github.com/IntershopCommunicationsAG/${project.name}"
+        issueTrackerUrl = "https://github.com/IntershopCommunicationsAG/${project.name}/issues"
+
+        labels = ['intershop', 'gradle', 'plugin', 'test']
+        publicDownloadNumbers = true
+
+        version {
+            name = project.version
+            desc = "${project.description} ${project.version}"
+            released  = new Date()
+            vcsTag = project.version
+        }
+
+        publications = ['intershopMvn']
+    }
+}
+
 bintrayUpload.dependsOn asciidoctor
 
 pluginBundle {
