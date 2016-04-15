@@ -1,0 +1,182 @@
+= Buildinfo Plugin
+:latestRevision: 1.0.0
+:toc:
+
+== Summary
+This plugin adds information about the build, OS, CI process and SCM to the publish meta file (pom.xml or ivy.xml) and
+to the jar file. This helps to verify build artifacts.
+
+== Usage
+To use the Gradle Intershop Buildinfo plugin, include the following in your build script:
+
+[source,groovy]
+[subs=+attributes]
+.build.gradle
+----
+plugins {
+    id 'com.intershop.gradle.buildinfo' version '{latestRevision}'
+}
+----
+
+This plugin will be activated if a system or environment variable `RUNONCI` or the project property `runOnCI` is specified.
+
+== Project Extension 'buildinfo'
+This plugin adds an extension *`buildinfo`* to the project.  This extension contains all plugin configurations.
+
+=== Properties
+[cols="17%,17%,17%,17%,51%", width="90%, options="header"]
+|===
+|Property | Type | Default value | Values | Description
+|*runOnCI* |`boolean`  | false | | This configuration must be true, if the project is used on a CI server. +
+                                 _This can be overwritten by the system or environment variable `RUNONCI` or project property `runOnCI`._
+|===
+
+== Example Build Information
+=== Maven pom.xml
+[source,xml]
+[subs=+attributes]
+.project.pom
+----
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.project.group</groupId>
+    <artifactId>project</artifactId>
+    <version>3.0.0</version>
+    <dependencies>
+    </dependencies>
+    <properties>
+        <!-- properties added by buildinfo gradle plugin - start --/>
+        <created-by>1.7.0_80-b15 (Oracle Corporation)</created-by>
+        <build-java-version>1.7.0_80</build-java-version>
+        <java-source-compatibility>1.7.0</java-source-compatibility>
+        <java-target-compatibility>1.7.0</java-target-compatibility>
+        <implementation-title>com.project.group:project:3.0.0</implementation-title>
+        <implementation-version>3.0.0</implementation-version>
+        <build-status>integration</build-status>
+        <built-by>isbldas</built-by>
+        <built-os>Linux</built-os>
+        <build-date>2015-09-21_22:58:51</build-date>
+        <gradle-version>2.6</gradle-version>
+        <module-origin>https://scm.server/projectroot</module-origin>
+        <scm-change-info>e14938d</scm-change-info>
+        <scm-change-time>19700117174747</scm-change-time>
+        <scm-branch-name>e14938df3f85f97065e7b456aef0f14ef669878a</scm-branch-name>
+        <scm-type>git</scm-type>
+        <ci-build-host>buildhost</ci-build-host>
+        <ci-build-url>https://scm.server/projectroot</ci-build-url>
+        <ci-build-number>8</ci-build-number>
+        <ci-build-job>BUILDJOB</ci-build-job>
+        <ci-build-time>2015-09-21T22:56:27.480+02:00</ci-build-time>
+        <!-- properties added by buildinfo gradle plugin - end --/>
+    </properties>
+</project>
+----
+
+=== Ivy ivy.xml
+[source,xml]
+[subs=+attributes]
+.ivy.xml
+----
+<ivy-module xmlns:e="http://ant.apache.org/ivy/extra" version="2.0">
+    <info organisation="com.project.group" module="project" revision="10.0.0" status="integration" publication="20160222151721">
+        <e:displayName>Project display name</e:displayName>
+        <!-- properties added by buildinfo gradle plugin - start --/>
+        <e:created-by>1.8.0_51-b16 (Oracle Corporation)</e:created-by>
+        <e:build-java-version>1.8.0_51</e:build-java-version>
+        <e:java-source-compatibility>1.8.0</e:java-source-compatibility>
+        <e:java-target-compatibility>1.8.0</e:java-target-compatibility>
+        <e:implementation-title>com.project.group:project:10.0.0</e:implementation-title>
+        <e:implementation-version>10.0.0</e:implementation-version>
+        <e:build-status>release</e:build-status>
+        <e:built-by>isbldas</e:built-by>
+        <e:built-os>Linux</e:built-os>
+        <e:build-date>2016-02-22_15:17:21</e:build-date>
+        <e:gradle-version>2.7</e:gradle-version>
+        <e:gradle-rootproject>project</e:gradle-rootproject>
+        <e:module-origin>https://scm.server/projectroot/branches/SB_10/scmsubproject</e:module-origin>
+        <e:scm-change-info>217925</e:scm-change-info>
+        <e:scm-change-time>-</e:scm-change-time>
+        <e:scm-branch-name>branches/SB_10.0</e:scm-branch-name>
+        <e:scm-type>svn</e:scm-type>
+        <e:ci-build-host>buildserver.com</e:ci-build-host>
+        <e:ci-build-url>https://buildserver.com/buildjob</e:ci-build-url>
+        <e:ci-build-number>15</e:ci-build-number>
+        <e:ci-build-job>buildjob</e:ci-build-job>
+        <e:ci-build-time>2016-02-22T15:09:15.508+01:00</e:ci-build-time>
+        <!-- properties added by buildinfo gradle plugin - end --/>
+    </info>
+    <configurations>
+        <conf name="default" visibility="public" extends="runtime"/>
+        <conf name="runtime" visibility="public"/>
+    </configurations>
+    <publications>
+        <artifact name="project" type="share" ext="zip" conf="runtime"/>
+        <artifact name="project" type="jar" ext="jar" conf="runtime"/>
+        <artifact xmlns:m="http://ant.apache.org/ivy/maven" name="project" type="javadoc" ext="jar" conf="runtime" m:classifier="javadoc"/>
+        <artifact name="project" type="cartridge" ext="zip" conf="runtime"/>
+    </publications>
+    <dependencies>
+    </dependencies>
+</ivy-module>
+----
+
+=== Jar File
+[source,properties]
+[subs=+attributes]
+.META-INF\MANIFEST.MF
+----
+Manifest-Version: 1.0
+Created-By: 1.7.0_80-b15 (Oracle Corporation)
+Build-Java-Version: 1.7.0_80
+X-Compile-Source-JDK: 1.7
+X-Compile-Target-JDK: 1.7
+Implementation-Title: com.project.group:project:10.0.0
+Implementation-Version: 10.0.0
+Build-Status: integration
+Built-By: gitlab-runner
+Built-OS: Linux
+Build-Date: 2016-03-26_17:06:24
+Gradle-Version: 2.11
+Gradle-RootProject: project
+Module-Origin: https://buildserver.com/buildjob
+SCM-change-info: c05817d
+SCM-change-time: 20160326165513
+SCM-branch-name: c05817d4cf68230258e1260183bfa26ee18c1cff
+SCM-type: git
+CI-build-host: buildhost.de
+CI-build-url: https://buildhost.de/project/buildjob
+CI-build-number: 1462
+CI-build-job: buildjob
+CI-build-time: 2016-02-22T15:09:15.508+01:00
+----
+
+=== Test
+The integration tests using a test repositories. Therefore it is necessary to specify project properties for the test execution.
+
+.Table Subversion test configuration
+|===
+|Test Property |Description | Value
+
+|*svnurl*    | Root URL of the test project        | Must be specified with environment variable *`SVNURL`*
+|*svnuser*   | User name of Subversion test user   | Must be specified with environment variable *`SVNUSER`*
+|*svnpasswd* | Password for Subversion test user   | Must be specified with environment variable *`SVNPASSWD`*
+|===
+
+.Table Git test configuration
+|===
+|Test Property |Description | Value
+
+|*giturl*    | URL of the test project      | Must be specified with environment variable *`GITURL`*
+|*gituser*   | User name of Git test user   | Must be specified with environment variable *`GITUSER`*
+|*gitpasswd* | Password for Git test user   | Must be specified with environment variable *`GITPASSWD`*
+|===
+
+== License
+
+Copyright 2014-2016 Intershop Communications.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.

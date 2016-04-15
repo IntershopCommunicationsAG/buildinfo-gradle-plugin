@@ -1,0 +1,219 @@
+plugins {
+    // project plugins
+    id 'java-gradle-plugin'
+    id 'groovy'
+    // test coverage
+    id 'jacoco'
+
+    // ide plugin
+    id 'idea'
+
+    // intershop test plugin
+    id 'com.intershop.gradle.test' version '1.0.0'
+
+    // plugin for documentation
+    id 'org.asciidoctor.convert' version '1.5.3'
+
+    // publish plugin
+    id 'maven-publish'
+
+    // intershop version plugin
+    id 'com.intershop.gradle.scmversion' version '1.0.1'
+
+    // plugin for publishing to Gradle Portal
+    id 'com.gradle.plugin-publish' version '0.9.4'
+}
+
+scm {
+    version {
+        initialVersion = '1.0.0'
+    }
+}
+
+// release configuration
+group 'com.intershop.gradle.buildinfo'
+description 'Gradle Buildinfo Plugin'
+version = scm.version.version
+
+// plugins should work with JDK 1.7 aslong
+// older INTERSHOP version use this version of JDK
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+// set correct project status
+if (project.version.endsWith('-SNAPSHOT')) {
+    status = 'snapshot'
+}
+
+// test configuration
+test {
+    if(System.getenv('SVNUSER') && System.getenv('SVNPASSWD') && System.getenv('SVNURL')) {
+        systemProperty 'svnurl', System.getenv('SVNURL')
+        systemProperty 'svnuser', System.getenv('SVNUSER')
+        systemProperty 'svnpasswd', System.getenv('SVNPASSWD')
+    }
+    if(System.getenv('GITUSER') && System.getenv('GITPASSWD') && System.getenv('GITURL')) {
+        systemProperty 'giturl', System.getenv('GITURL')
+        systemProperty 'gituser', System.getenv('GITUSER')
+        systemProperty 'gitpasswd', System.getenv('GITPASSWD')
+    }
+
+    if(System.getProperty('SVNUSER') && System.getProperty('SVNPASSWD') && System.getProperty('SVNURL')) {
+        systemProperty 'svnurl', System.getProperty('SVNURL')
+        systemProperty 'svnuser', System.getProperty('SVNUSER')
+        systemProperty 'svnpasswd', System.getProperty('SVNPASSWD')
+    }
+
+    if(System.getProperty('GITUSER') && System.getProperty('GITPASSWD') && System.getProperty('GITURL')) {
+        systemProperty 'giturl', System.getProperty('GITURL')
+        systemProperty 'gituser', System.getProperty('GITUSER')
+        systemProperty 'gitpasswd', System.getProperty('GITPASSWD')
+    }
+
+    //Change directory for gradle tests
+    systemProperty 'org.gradle.native.dir', '.gradle'
+    //Set supported Gradle version
+    systemProperty 'intershop.gradle.versions', '2.10,2.11'
+}
+
+task copyAsciiDoc {
+    def outputDir = file("$buildDir/tmp/asciidoctorSrc")
+    def inputFiles = fileTree(dir: rootDir, include: '**/*.asciidoc')
+
+    inputs.files inputFiles
+    outputs.dir outputDir
+
+    doLast {
+        outputDir.mkdirs()
+
+        copy {
+            from inputFiles
+            into outputDir
+        }
+    }
+}
+
+asciidoctorj {
+    noDefaultRepositories = true
+}
+
+asciidoctor {
+    sourceDir "${buildDir}/tmp/asciidoctorSrc"
+    sources {
+        include 'README.asciidoc'
+    }
+
+    backends 'html5', 'docbook'
+    options doctype : 'article',
+            ruby    : 'erubis'
+    attributes  'latestRevision'     : project.version,
+            'toc':'left',
+            'toclevels':'2',
+            'source-highlighter' : 'coderay',
+            'icons': 'font',
+            'setanchors':'true',
+            'idprefix':'asciidoc_',
+            'idseparator':'-',
+            'docinfo1':'true'
+}
+
+asciidoctor.dependsOn copyAsciiDoc
+
+jacocoTestReport {
+    reports {
+        xml.enabled = true // coveralls plugin depends on xml format report
+        html.enabled = true
+    }
+}
+
+task groovydocJar(type: Jar) {
+    dependsOn groovydoc
+    classifier = 'javadoc'
+    from groovydoc.destinationDir
+}
+
+// additional sources artifact
+task sourceJar(type: Jar) {
+    from sourceSets.main.allSource
+}
+
+publishing {
+    publications {
+        intershopMvn(MavenPublication) {
+            from components.java
+
+            artifact sourceJar {
+                classifier 'sources'
+            }
+
+            artifact groovydocJar {
+                classifier "javadoc"
+            }
+
+            artifact(new File(buildDir, 'asciidoc/html5/README.html')) {
+                classifier 'reference'
+            }
+
+            artifact(new File(buildDir, 'asciidoc/docbook/README.xml')) {
+                classifier = 'docbook'
+            }
+
+            pom.withXml {
+                def Node root = asNode();
+                root.appendNode('name', project.name)
+                root.appendNode('description', project.description)
+                root.appendNode('url', "https:/gitlab.intershop.de/IntershopGradlePlugins/${project.name}")
+
+                def scm = root.appendNode( 'scm' )
+                scm.appendNode( 'url', "https://gitlab.intershop.de/IntershopGradlePlugins/${project.name}")
+                scm.appendNode( 'connection', "scm:git:https://gitlab.intershop.de/IntershopGradlePlugins/${project.name}.git")
+
+                def org = root.appendNode( 'organization' )
+                org.appendNode( 'name', 'Intershop Communications' )
+                org.appendNode( 'url', 'http://intershop.com' )
+
+                def license = root.appendNode( 'licenses' ).appendNode( 'license' );
+                license.appendNode( 'name', 'Apache License, Version 2.0' )
+                license.appendNode( 'url', 'http://www.apache.org/licenses/LICENSE-2.0' )
+                license.appendNode( 'distribution', 'repo' )
+            }
+        }
+    }
+}
+
+publish.dependsOn asciidoctor
+bintrayUpload.dependsOn asciidoctor
+
+pluginBundle {
+    website = "https://github.com/IntershopCommunicationsAG/${project.name}"
+    vcsUrl = "https://github.com/IntershopCommunicationsAG/${project.name}"
+    description = project.description
+    tags = ['intershop', 'gradle', 'plugin', 'test']
+
+    plugins {
+        gradleTestPlugin {
+            id = 'com.intershop.gradle.buildinfo'
+            displayName = project.description
+        }
+    }
+}
+
+dependencies {
+    //svn
+    // replace svnkit's JNA 4.x with 3.2.7, which is used by Gradle itself
+    compile('org.tmatesoft.svnkit:svnkit:1.8.12') {
+        exclude group: 'net.java.dev.jna'
+    }
+    runtime 'net.java.dev.jna:jna:3.2.7'
+
+    //jgit
+    compile 'org.eclipse.jgit:org.eclipse.jgit:4.2.0.201601211800-r'
+
+    testCompile('org.spockframework:spock-core:1.0-groovy-2.4') {
+        exclude group: 'org.codehaus.groovy'
+    }
+}
+
+repositories {
+    jcenter()
+}
