@@ -38,8 +38,6 @@ group 'com.intershop.gradle.buildinfo'
 description 'Gradle Buildinfo Plugin'
 version = scm.version.version
 
-// plugins should work with JDK 1.7 aslong
-// older INTERSHOP version use this version of JDK
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
