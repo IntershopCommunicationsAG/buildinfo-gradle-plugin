@@ -55,11 +55,12 @@ class BuildInfoPlugin implements Plugin<Project> {
 
         this.extension = project.extensions.findByType(BuildInfoExtension) ?: project.extensions.create(EXTENSION_NAME, BuildInfoExtension, project)
 
+        if(extension.runOnCI) {
+            initializeProvider(project)
+        }
+
         project.afterEvaluate {
             if (extension.runOnCI) {
-
-                initializeProvider(project)
-
                 project.tasks.withType(Jar) { Jar jarTask ->
                     def attributes = [
                         'Created-By'            : "${infoProvider.javaRuntimeVersion} (${infoProvider.javaVendor})",
