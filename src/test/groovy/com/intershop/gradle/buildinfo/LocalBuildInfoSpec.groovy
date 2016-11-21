@@ -213,9 +213,11 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
                 .build()
 
         then:
-        ! result.output.contains('Add buildinfo to ivy file')
-        result.output.contains('Add buildinfo to manifest')
         (new File(testProjectDir, 'build/repo/com.test/test/1.0.0.0/ivy-1.0.0.0.xml')).exists()
+        (new File(testProjectDir, 'build/tmp/jar/MANIFEST.MF')).exists()
+
+        String mfFileContents = new File(testProjectDir, 'build/tmp/jar/MANIFEST.MF').text
+        assertTrue(mfFileContents.contains('Implementation-Title: com.test:test:1.0.0.0'))
 
         String ivyFileContents = new File(testProjectDir,  'build/repo/com.test/test/1.0.0.0/ivy-1.0.0.0.xml').text
         assertFalse(ivyFileContents.contains('com.test:test:1.0.0.0'))
@@ -285,9 +287,11 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
                 .build()
 
         then:
-        ! result.output.contains('Add buildinfo to pom file')
-        result.output.contains('Add buildinfo to manifest')
         (new File(testProjectDir, 'build/repo/com/test/test/1.0.0.0/test-1.0.0.0.pom')).exists()
+        (new File(testProjectDir, 'build/tmp/jar/MANIFEST.MF')).exists()
+
+        String mfFileContents = new File(testProjectDir, 'build/tmp/jar/MANIFEST.MF').text
+        assertTrue(mfFileContents.contains('Implementation-Title: com.test:test:1.0.0.0'))
 
         String pomFileContents = new File(testProjectDir, 'build/repo/com/test/test/1.0.0.0/test-1.0.0.0.pom').text
         assertFalse(pomFileContents.contains('com.test:test:1.0.0.0'))
@@ -301,8 +305,6 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
                 .build()
 
         then:
-        ! secResult.output.contains('Add buildinfo to pom file')
-        secResult.output.contains('Add buildinfo to manifest')
         (new File(testProjectDir, 'build/repo/com/test/test/1.0.0.0/test-1.0.0.0.pom')).exists()
 
         String secPomFileContents = new File(testProjectDir, 'build/repo/com/test/test/1.0.0.0/test-1.0.0.0.pom').text
@@ -357,9 +359,11 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
                 .build()
 
         then:
-        result.output.contains('Add buildinfo to pom file')
-        result.output.contains('Add buildinfo to manifest')
         (new File(testProjectDir, 'build/repo/com/test/test/1.0.0.0/test-1.0.0.0.pom')).exists()
+        (new File(testProjectDir, 'build/tmp/jar/MANIFEST.MF')).exists()
+
+        String mfFileContents = new File(testProjectDir, 'build/tmp/jar/MANIFEST.MF').text
+        assertTrue(mfFileContents.contains('Implementation-Title: com.test:test:1.0.0.0'))
 
         String pomFileContents = new File(testProjectDir, 'build/repo/com/test/test/1.0.0.0/test-1.0.0.0.pom').text
         assertTrue(pomFileContents.contains('com.test:test:1.0.0.0'))
@@ -373,8 +377,6 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
                 .build()
 
         then:
-        secResult.output.contains('Add buildinfo to pom file')
-        secResult.output.contains('Add buildinfo to manifest')
         (new File(testProjectDir, 'build/repo/com/test/test/1.0.0.0/test-1.0.0.0.pom')).exists()
 
         String secPomFileContents = new File(testProjectDir, 'build/repo/com/test/test/1.0.0.0/test-1.0.0.0.pom').text
