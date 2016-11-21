@@ -231,8 +231,6 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
                 .build()
 
         then:
-        ! secResult.output.contains('Add buildinfo to ivy file')
-        secResult.output.contains('Add buildinfo to manifest')
         (new File(testProjectDir, 'build/repo/com.test/test/1.0.0.0/ivy-1.0.0.0.xml')).exists()
 
         String secIvyFileContents = new File(testProjectDir,  'build/repo/com.test/test/1.0.0.0/ivy-1.0.0.0.xml').text
