@@ -17,7 +17,11 @@ package com.intershop.gradle.buildinfo
 
 import com.intershop.gradle.buildinfo.scm.GitScmInfoProvider
 import com.intershop.gradle.test.util.TestDir
+import org.eclipse.jgit.api.CheckoutCommand
+import org.eclipse.jgit.api.FetchCommand
 import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.lib.Repository
+import org.eclipse.jgit.lib.RepositoryBuilder
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import spock.lang.Requires
 import spock.lang.Specification
@@ -51,6 +55,67 @@ class GitBuildInfoSpec extends Specification {
 
         then:
         branch == 'master'
+
+        when:
+        String rev = provider.SCMRevInfo
+
+        then:
+        rev != ''
+
+        when:
+        String time = provider.lastChangeTime
+
+        then:
+        time != ''
+
+        when:
+        String type = provider.SCMType
+
+        then:
+        type == 'git'
+    }
+
+    @Requires({ System.properties['giturl'] &&
+            System.properties['gituser'] &&
+            System.properties['gitpasswd'] })
+    def 'calculate module origin and branch from tag'() {
+        setup:
+        Git.cloneRepository()
+                .setURI(System.properties['giturl'])
+                .setDirectory(projectDir)
+                .setCredentialsProvider( new UsernamePasswordCredentialsProvider( System.properties['gituser'], System.properties['gitpasswd'] ) )
+                .call()
+
+        Repository repo = new RepositoryBuilder()
+                .readEnvironment()
+                .findGitDir(projectDir)
+                .build()
+        Git git = new Git(repo)
+
+        FetchCommand fetch = git.fetch()
+        fetch.remote = 'origin'
+        fetch.setCheckFetchedObjects(true)
+        fetch.setCredentialsProvider( new UsernamePasswordCredentialsProvider( System.properties['gituser'], System.properties['gitpasswd']) )
+        fetch.call()
+
+        CheckoutCommand checkout = git.checkout()
+        checkout.setName("tags/CLRELEASE_1.5.0")
+        checkout.setStartPoint("tags/CLRELEASE_1.5.0")
+        checkout.call()
+
+        def provider = new GitScmInfoProvider(projectDir)
+
+        when:
+        String origin = provider.SCMOrigin
+
+        then:
+        origin == System.properties['giturl']
+
+        when:
+        String branch = provider.branchName
+
+        then:
+        branch == 'CLRELEASE_1.5.0'
 
         when:
         String rev = provider.SCMRevInfo
