@@ -18,10 +18,10 @@ plugins {
     id 'maven-publish'
 
     // intershop version plugin
-    id 'com.intershop.gradle.scmversion' version '2.3.0'
+    id 'com.intershop.gradle.scmversion' version '2.3.4'
 
     // plugin for publishing to Gradle Portal
-    id 'com.gradle.plugin-publish' version '0.9.6'
+    id 'com.gradle.plugin-publish' version '0.9.7'
 
     // plugin for publishing to jcenter
     id 'com.jfrog.bintray' version '1.7.3'
@@ -232,7 +232,7 @@ pluginBundle {
 dependencies {
     //svn
     // replace svnkit's JNA 4.x with 3.2.7, which is used by Gradle itself
-    compile('org.tmatesoft.svnkit:svnkit:1.8.14') {
+    compile('org.tmatesoft.svnkit:svnkit:1.8.15') {
         exclude group: 'net.java.dev.jna'
         exclude group: 'com.trilead', module: 'trilead-ssh2'
     }
