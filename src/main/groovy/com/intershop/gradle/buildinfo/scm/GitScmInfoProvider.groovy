@@ -15,7 +15,6 @@
  */
 package com.intershop.gradle.buildinfo.scm
 
-import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.*
@@ -73,7 +72,6 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
      * Returns branch name of the working copy (read only)
      * @return branch name
      */
-    @CompileDynamic
     @Override
     String getBranchName() {
         String rv = gitRepo.branch
@@ -84,9 +82,7 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
         refList.any {Ref ref ->
             Ref peeledRef = gitRepo.peel(ref)
             String hashID =  ref.getObjectId()
-            if(peeledRef.getPeeledObjectId() != null) {
-                hashID = peeledRef.getPeeledObjectId().getName()
-            }
+            hashID = peeledRef.getPeeledObjectId()?.getName()
             if(hashID == rv) {
                 rv = ref.getName()
                 return true

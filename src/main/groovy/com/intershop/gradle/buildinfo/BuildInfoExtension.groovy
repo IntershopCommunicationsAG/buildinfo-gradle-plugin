@@ -18,6 +18,7 @@ package com.intershop.gradle.buildinfo
 import com.intershop.gradle.buildinfo.basic.InfoProvider
 import com.intershop.gradle.buildinfo.ci.AbstractCIInfoProvider
 import com.intershop.gradle.buildinfo.scm.AbstractScmInfoProvider
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.gradle.api.Project
 
@@ -25,6 +26,7 @@ import org.gradle.api.Project
  * <p>This is the extension object for the Intershop buildinfo plugin.</p>
  */
 @Slf4j
+@CompileStatic
 class BuildInfoExtension {
 
     // run on CI server
@@ -114,9 +116,9 @@ class BuildInfoExtension {
         } else if(System.getenv(envVar)) {
             log.debug('Specified from system environment property {}.', envVar)
             return System.getenv(envVar).toString().trim()
-        } else if(project.hasProperty(projectVar) && project."${projectVar}") {
+        } else if(project.hasProperty(projectVar) && project.property(projectVar)) {
             log.debug('Specified from project property {}.', projectVar)
-            return project."${projectVar}".toString().trim()
+            return project.property(projectVar).toString().trim()
         }
         return defaultValue
     }
