@@ -42,7 +42,7 @@ class InfoProvider {
      * Returns the project java.runtime.version (read only)
      * @return java.runtime.version
      */
-    String getJavaRuntimeVersion() {
+    static String getJavaRuntimeVersion() {
         return System.getProperty('java.runtime.version')
     }
 
@@ -50,7 +50,7 @@ class InfoProvider {
      * Returns the project java.version (read only)
      * @return java.version
      */
-    String getJavaVersion() {
+    static String getJavaVersion() {
         return System.getProperty('java.version')
     }
 
@@ -58,7 +58,7 @@ class InfoProvider {
      * Returns the project java VM vendor (read only)
      * @return java.vm.specification.vendor
      */
-    String getJavaVendor() {
+    static String getJavaVendor() {
         System.getProperty('java.vm.specification.vendor')
     }
 
@@ -78,14 +78,6 @@ class InfoProvider {
     String getJavaSourceCompatibility() {
         JavaPluginConvention javaConvention = project.convention.findPlugin(JavaPluginConvention)
         return javaConvention ? javaConvention.sourceCompatibility : ''
-    }
-
-    /**
-     * Returns the path of the used JAVA_HOME
-     * @return path to java home
-     */
-    String getJavaHome() {
-        return System.getenv('JAVA_HOME')
     }
 
     /**
@@ -124,7 +116,7 @@ class InfoProvider {
      * Returns the username of the build user
      * @return username
      */
-    String getOSUser() {
+    static String getOSUser() {
         return System.getProperty('user.name')
     }
 
@@ -132,7 +124,7 @@ class InfoProvider {
      * Returns the OS name.
      * @return OS name
      */
-    String getOSName() {
+    static String getOSName() {
         System.getProperty('os.name')
     }
 
@@ -140,7 +132,7 @@ class InfoProvider {
      * The build time on the build machine.
      * @return time string
      */
-    String getOSTime() {
+    static String getOSTime() {
        new Date().format('yyyy-MM-dd_HH:mm:ss')
     }
 
