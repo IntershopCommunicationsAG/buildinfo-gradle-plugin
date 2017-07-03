@@ -44,8 +44,8 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
             group = 'com.test'
             version = '1.0.0.0'
 
-            sourceCompatibility = 1.7
-            targetCompatibility = 1.7
+            sourceCompatibility = 1.8
+            targetCompatibility = 1.8
 
             publishing {
                 repositories {
@@ -116,8 +116,8 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
             group = 'com.test'
             version = '1.0.0.0'
 
-            sourceCompatibility = 1.7
-            targetCompatibility = 1.7
+            sourceCompatibility = 1.8
+            targetCompatibility = 1.8
 
             publishing {
                 repositories {
@@ -188,8 +188,8 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
             group = 'com.test'
             version = '1.0.0.0'
 
-            sourceCompatibility = 1.7
-            targetCompatibility = 1.7
+            sourceCompatibility = 1.8
+            targetCompatibility = 1.8
 
             publishing {
                 repositories {
@@ -260,8 +260,8 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
             group = 'com.test'
             version = '1.0.0.0'
 
-            sourceCompatibility = 1.7
-            targetCompatibility = 1.7
+            sourceCompatibility = 1.8
+            targetCompatibility = 1.8
 
             publishing {
                 repositories {
@@ -332,8 +332,8 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
             group = 'com.test'
             version = '1.0.0.0'
 
-            sourceCompatibility = 1.7
-            targetCompatibility = 1.7
+            sourceCompatibility = 1.8
+            targetCompatibility = 1.8
 
             publishing {
                 repositories {

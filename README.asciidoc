@@ -1,5 +1,5 @@
 = Buildinfo Plugin
-:latestRevision: 2.3.1
+:latestRevision: 3.0.0
 :toc:
 
 == Summary
