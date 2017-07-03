@@ -108,7 +108,7 @@ class BuildInfoPlugin implements Plugin<Project> {
                 }
 
                 if (!extension.noDescriptorInfo) {
-                    project.tasks.withType(GenerateIvyDescriptor) { GenerateIvyDescriptor ivyTask ->
+                    /** project.tasks.withType(GenerateIvyDescriptor) { GenerateIvyDescriptor ivyTask ->
                         project.logger.info("Add buildinfo to ivy file")
                         ivyTask.descriptor.withXml(new Action<XmlProvider>() {
 
@@ -286,7 +286,7 @@ class BuildInfoPlugin implements Plugin<Project> {
                                 node.appendChild(nelement)
                             }
                         })
-                    }
+                    }*/
                 }
             }
         }
