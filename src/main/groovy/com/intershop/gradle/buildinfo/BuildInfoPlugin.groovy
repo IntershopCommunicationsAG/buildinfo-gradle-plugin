@@ -269,7 +269,7 @@ class BuildInfoPlugin implements Plugin<Project> {
                                         scmProvider.branchName)
                                 addNode(propsNode,'scm-type',
                                         scmProvider.SCMType)
-                                /**
+
                                 addNode(propsNode,'ci-build-host',
                                         ciProvider.buildHost)
                                 addNode(propsNode,'ci-build-url',
@@ -280,7 +280,7 @@ class BuildInfoPlugin implements Plugin<Project> {
                                         ciProvider.buildJob)
                                 addNode(propsNode,'ci-build-time',
                                         ciProvider.buildTime)
-                                        */
+
                             }
 
                             private void addNode(org.w3c.dom.Node node, String name, String value) {
