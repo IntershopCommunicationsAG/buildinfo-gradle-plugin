@@ -167,7 +167,7 @@ class BuildInfoPlugin implements Plugin<Project> {
                                 checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
                                         'e:module-origin',
                                         scmProvider.SCMOrigin)
-/**
+
                                 checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
                                         'e:scm-change-info',
                                         scmProvider.SCMRevInfo)
@@ -183,7 +183,7 @@ class BuildInfoPlugin implements Plugin<Project> {
                                 checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
                                         'e:scm-type',
                                         scmProvider.SCMType)
-
+/**
                                 checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
                                         'e:ci-build-host',
                                         ciProvider.buildHost)
@@ -258,7 +258,7 @@ class BuildInfoPlugin implements Plugin<Project> {
                                         infoProvider.gradleVersion)
                                 addNode(propsNode,'gradle-rootproject',
                                         infoProvider.rootProject)
-                                /**
+
                                 addNode(propsNode,'module-origin',
                                         scmProvider.SCMOrigin)
                                 addNode(propsNode,'scm-change-info',
@@ -269,6 +269,7 @@ class BuildInfoPlugin implements Plugin<Project> {
                                         scmProvider.branchName)
                                 addNode(propsNode,'scm-type',
                                         scmProvider.SCMType)
+                                /**
                                 addNode(propsNode,'ci-build-host',
                                         ciProvider.buildHost)
                                 addNode(propsNode,'ci-build-url',
