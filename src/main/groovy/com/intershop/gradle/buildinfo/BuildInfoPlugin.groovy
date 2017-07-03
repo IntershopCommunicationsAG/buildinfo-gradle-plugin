@@ -108,14 +108,15 @@ class BuildInfoPlugin implements Plugin<Project> {
                 }
 
                 if (!extension.noDescriptorInfo) {
-                    /** project.tasks.withType(GenerateIvyDescriptor) { GenerateIvyDescriptor ivyTask ->
+                    project.tasks.withType(GenerateIvyDescriptor) { GenerateIvyDescriptor ivyTask ->
                         project.logger.info("Add buildinfo to ivy file")
                         ivyTask.descriptor.withXml(new Action<XmlProvider>() {
 
                             @Override
                             void execute(XmlProvider xmlProvider) {
                                 xmlProvider.asElement().setAttribute('xmlns:e', 'http://ant.apache.org/ivy/extra')
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
+                                /**
+                                 checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
                                         'e:created-by',
                                         "${infoProvider.javaRuntimeVersion} (${infoProvider.javaVendor})")
 
@@ -202,6 +203,7 @@ class BuildInfoPlugin implements Plugin<Project> {
                                 checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
                                         'e:ci-build-time',
                                         ciProvider.buildTime)
+                                 **/
                             }
 
                             private void checkNode(org.w3c.dom.Node node, String name, String value) {
@@ -231,7 +233,7 @@ class BuildInfoPlugin implements Plugin<Project> {
 
                                 org.w3c.dom.Node propsNode = rootElement.appendChild(
                                         rootElement.getOwnerDocument().createElement('properties'))
-
+                                /**
                                 addNode(propsNode, 'created-by',
                                         "${infoProvider.javaRuntimeVersion} (${infoProvider.javaVendor})")
                                 addNode(propsNode,"build-java-version",
@@ -276,6 +278,7 @@ class BuildInfoPlugin implements Plugin<Project> {
                                         ciProvider.buildJob)
                                 addNode(propsNode,'ci-build-time',
                                         ciProvider.buildTime)
+                                        */
                             }
 
                             private void addNode(org.w3c.dom.Node node, String name, String value) {
@@ -286,7 +289,7 @@ class BuildInfoPlugin implements Plugin<Project> {
                                 node.appendChild(nelement)
                             }
                         })
-                    }*/
+                    }
                 }
             }
         }
