@@ -62,7 +62,7 @@ abstract class AbstractCIInfoProvider {
      * @return host name
      */
     String getBuildHost() {
-        return InetAddress.localHost.hostName
+        return InetAddress.localHost.hostName ?: 'unknown'
     }
 
     /**
@@ -72,7 +72,7 @@ abstract class AbstractCIInfoProvider {
      * @return
      */
     protected static String getEnvironmentVariable(String envKey) {
-        System.getenv(envKey)
+        return System.getenv(envKey) ?: 'unknown'
     }
 
     protected static String getSecuredURL(String urlString) {

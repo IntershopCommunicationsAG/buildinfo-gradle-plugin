@@ -183,7 +183,7 @@ class BuildInfoPlugin implements Plugin<Project> {
                                 checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
                                         'e:scm-type',
                                         scmProvider.SCMType)
-/**
+
                                 checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
                                         'e:ci-build-host',
                                         ciProvider.buildHost)
@@ -203,7 +203,7 @@ class BuildInfoPlugin implements Plugin<Project> {
                                 checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
                                         'e:ci-build-time',
                                         ciProvider.buildTime)
-                                 **/
+
                             }
 
                             private void checkNode(org.w3c.dom.Node node, String name, String value) {
