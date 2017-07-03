@@ -72,6 +72,14 @@ test {
     systemProperty 'org.gradle.native.dir', '.gradle'
     //Set supported Gradle version
     systemProperty 'intershop.gradle.versions', '4.0'
+
+    testLogging {
+        events 'failed'
+        exceptionFormat 'full'
+
+        showStackTraces = true
+        showStandardStreams = true
+    }
 }
 
 task copyAsciiDoc {
