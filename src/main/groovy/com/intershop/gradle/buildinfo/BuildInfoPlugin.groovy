@@ -115,8 +115,8 @@ class BuildInfoPlugin implements Plugin<Project> {
                             @Override
                             void execute(XmlProvider xmlProvider) {
                                 xmlProvider.asElement().setAttribute('xmlns:e', 'http://ant.apache.org/ivy/extra')
-                                /**
-                                 checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
+
+                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
                                         'e:created-by',
                                         "${infoProvider.javaRuntimeVersion} (${infoProvider.javaVendor})")
 
@@ -167,7 +167,7 @@ class BuildInfoPlugin implements Plugin<Project> {
                                 checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
                                         'e:module-origin',
                                         scmProvider.SCMOrigin)
-
+/**
                                 checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
                                         'e:scm-change-info',
                                         scmProvider.SCMRevInfo)
@@ -233,7 +233,7 @@ class BuildInfoPlugin implements Plugin<Project> {
 
                                 org.w3c.dom.Node propsNode = rootElement.appendChild(
                                         rootElement.getOwnerDocument().createElement('properties'))
-                                /**
+
                                 addNode(propsNode, 'created-by',
                                         "${infoProvider.javaRuntimeVersion} (${infoProvider.javaVendor})")
                                 addNode(propsNode,"build-java-version",
@@ -258,6 +258,7 @@ class BuildInfoPlugin implements Plugin<Project> {
                                         infoProvider.gradleVersion)
                                 addNode(propsNode,'gradle-rootproject',
                                         infoProvider.rootProject)
+                                /**
                                 addNode(propsNode,'module-origin',
                                         scmProvider.SCMOrigin)
                                 addNode(propsNode,'scm-change-info',
