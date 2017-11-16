@@ -18,7 +18,7 @@ plugins {
 }
 ----
 
-This plugin will be activated if a system or environment variable `RUNONCI` or the project property `runOnCI` is specified.
+If a system or environment variable `RUNONCI` or the project property `runOnCI` is specified the plugin will add some CI specific information to code artifacts.
 
 == Project Extension 'buildinfo'
 This plugin adds an extension *`buildinfo`* to the project.  This extension contains all plugin configurations.
