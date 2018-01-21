@@ -9,7 +9,7 @@ plugins {
     id 'idea'
 
     // intershop version plugin
-    id 'com.intershop.gradle.scmversion' version '3.2.0'
+    id 'com.intershop.gradle.scmversion' version '3.4.0'
 
     // plugin for documentation
     id 'org.asciidoctor.convert' version '1.5.3'
@@ -34,6 +34,15 @@ scm {
 group 'com.intershop.gradle.buildinfo'
 description 'Gradle Buildinfo Plugin'
 version = scm.version.version
+
+gradlePlugin {
+    plugins {
+        buildinfoPlugin {
+            id = 'com.intershop.gradle.buildinfo'
+            implementationClass = 'com.intershop.gradle.buildinfo.BuildInfoPlugin'
+        }
+    }
+}
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -204,7 +213,7 @@ bintray {
         websiteUrl = "https://github.com/IntershopCommunicationsAG/${project.name}"
         issueTrackerUrl = "https://github.com/IntershopCommunicationsAG/${project.name}/issues"
 
-        labels = ['intershop', 'gradle', 'plugin', 'test']
+        labels = ['intershop', 'gradle', 'plugin', 'build', 'information', 'release']
         publicDownloadNumbers = true
 
         version {
@@ -224,11 +233,11 @@ pluginBundle {
     website = "https://github.com/IntershopCommunicationsAG/${project.name}"
     vcsUrl = "https://github.com/IntershopCommunicationsAG/${project.name}"
     description = project.description
-    tags = ['intershop', 'gradle', 'plugin', 'test']
+    tags = ['intershop', 'gradle', 'plugin', 'build', 'information', 'release']
 
     plugins {
-        gradleTestPlugin {
-            id = 'com.intershop.gradle.buildinfo'
+        buildinfoPlugin {
+            id = gradlePlugin.plugins.buildinfoPlugin.id
             displayName = project.description
         }
     }

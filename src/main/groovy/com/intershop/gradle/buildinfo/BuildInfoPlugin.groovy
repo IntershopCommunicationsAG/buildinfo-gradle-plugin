@@ -72,33 +72,33 @@ class BuildInfoPlugin implements Plugin<Project> {
                         'X-Compile-Target-JDK' : infoProvider.javaTargetCompatibility ?: infoProvider.javaVersion.split('_')[0],
 
                         'Manifest-Version'     : '1.0',
-                        'Implementation-Title' : "${infoProvider.projectModule ?: 'unknown'}",
-                        'Implementation-Vendor': "${extension.getModuleVendor() ?: 'unknown'}"
+                        'Implementation-Title' : (infoProvider.projectModule ?: 'unknown'),
+                        'Implementation-Vendor': (extension.getModuleVendor() ?: 'unknown')
                 ]
 
                 if (extension.runOnCI && extension.additionalJarInfo) {
                     project.logger.info('Buildinfo for manifest will be extended!')
                     attributes.putAll([
-                            'Implementation-Version': "${infoProvider.projectVersion ?: 'unknown'}",
+                            'Implementation-Version': (infoProvider.projectVersion.toString() ?: 'unknown'),
 
-                            'Build-Status'          : "${infoProvider.projectStatus ?: 'unknown'}",
-                            'Built-By'              : "${infoProvider.OSUser ?: 'unknown'}",
-                            'Built-OS'              : "${infoProvider.OSName ?: 'unknown'}",
-                            'Build-Date'            : "${infoProvider.OSTime ?: 'unknown'}",
-                            'Gradle-Version'        : "${infoProvider.gradleVersion ?: 'unknown'}",
-                            'Gradle-RootProject'    : "${infoProvider.rootProject ?: 'unknown'}",
+                            'Build-Status'          : (infoProvider.projectStatus ?: 'unknown'),
+                            'Built-By'              : (infoProvider.OSUser ?: 'unknown'),
+                            'Built-OS'              : (infoProvider.OSName ?: 'unknown'),
+                            'Build-Date'            : (infoProvider.OSTime ?: 'unknown'),
+                            'Gradle-Version'        : (infoProvider.gradleVersion ?: 'unknown'),
+                            'Gradle-RootProject'    : (infoProvider.rootProject ?: 'unknown'),
 
-                            'Module-Origin'         : "${scmProvider.SCMOrigin ?: 'unknown'}",
-                            'SCM-change-info'       : "${scmProvider.SCMRevInfo ?: 'unknown'}",
-                            'SCM-change-time'       : "${scmProvider.lastChangeTime ?: 'unknown'}",
-                            'SCM-branch-name'       : "${scmProvider.branchName ?: 'unknown'}",
-                            'SCM-type'              : "${scmProvider.SCMType ?: 'unknown'}",
+                            'Module-Origin'         : (scmProvider.SCMOrigin ?: 'unknown'),
+                            'SCM-change-info'       : (scmProvider.SCMRevInfo ?: 'unknown'),
+                            'SCM-change-time'       : (scmProvider.lastChangeTime ?: 'unknown'),
+                            'SCM-branch-name'       : (scmProvider.branchName ?: 'unknown'),
+                            'SCM-type'              : (scmProvider.SCMType ?: 'unknown'),
 
-                            'CI-build-host'         : "${ciProvider.buildHost ?: 'unknown'}",
-                            'CI-build-url'          : "${ciProvider.buildUrl ?: 'unknown'}",
-                            'CI-build-number'       : "${ciProvider.buildNumber ?: 'unknown'}",
-                            'CI-build-job'          : "${ciProvider.buildJob ?: 'unknown'}",
-                            'CI-build-time'         : "${ciProvider.buildTime ?: 'unknown'}"
+                            'CI-build-host'         : (ciProvider.buildHost ?: 'unknown'),
+                            'CI-build-url'          : (ciProvider.buildUrl ?: 'unknown'),
+                            'CI-build-number'       : (ciProvider.buildNumber ?: 'unknown'),
+                            'CI-build-job'          : (ciProvider.buildJob ?: 'unknown'),
+                            'CI-build-time'         : (ciProvider.buildTime ?: 'unknown')
                     ])
                 }
 
@@ -137,7 +137,7 @@ class BuildInfoPlugin implements Plugin<Project> {
 
                             checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
                                     'e:implementation-vendor',
-                                    "${extension.getModuleVendor() ?: 'unknonw'}")
+                                    (extension.getModuleVendor() ?: 'unknonw'))
 
                             checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
                                     'e:implementation-title',
@@ -250,7 +250,7 @@ class BuildInfoPlugin implements Plugin<Project> {
                             addNode(propsNode,'java-target-compatibility',
                                     infoProvider.javaTargetCompatibility ?: infoProvider.javaVersion.split('_')[0])
                             addNode(propsNode,'implementation-vendor',
-                                    "${extension.getModuleVendor() ?: 'unknonw'}")
+                                    (extension.getModuleVendor() ?: 'unknonw'))
                             addNode(propsNode,'implementation-title',
                                     infoProvider.projectModule)
                             addNode(propsNode,'implementation-version',
