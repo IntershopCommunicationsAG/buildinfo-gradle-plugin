@@ -50,7 +50,7 @@ class BuildInfoExtension {
             log.warn('Buildinfo task will be executed on a CI build environment for {}.', project.name)
         }
 
-        noJarInfo = Boolean.parseBoolean(getVariable(NOJARINFO_ENV, NOJARINFO_PRJ, 'false'))
+        noJarInfo = Boolean.parseBoolean(getVariable(NOJARINFO_ENV, NOJARINFO_PRJ, 'true'))
         if(noJarInfo) {
             log.info('No information will be attached to jar files of {}.', project.name)
         }

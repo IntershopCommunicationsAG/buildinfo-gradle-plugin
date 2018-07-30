@@ -25,14 +25,28 @@ import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
 import org.gradle.api.Action
+import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.XmlProvider
+import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.ivy.IvyPublication
 import org.gradle.api.publish.ivy.tasks.GenerateIvyDescriptor
+import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.tasks.GenerateMavenPom
 import org.gradle.api.tasks.bundling.Jar
+import org.gradle.model.Defaults
+import org.gradle.model.ModelMap
+import org.gradle.model.RuleSource
+import org.gradle.model.internal.core.ModelPath
+import org.gradle.model.internal.core.ModelReference
+import org.gradle.model.internal.core.ModelRegistrations
+import org.gradle.model.internal.registry.ModelRegistry
 import org.w3c.dom.Document
 import org.w3c.dom.Element
+
+import javax.inject.Inject
 
 /**
  * <p>This plugin will apply the buildinfo plugin.</p>
@@ -50,10 +64,12 @@ class BuildInfoPlugin implements Plugin<Project> {
     final static String EXTENSION_NAME = 'buildinfo'
 
     private BuildInfoExtension extension
-    // private doesn't work inside closures
-    @PackageScope InfoProvider infoProvider
-    @PackageScope AbstractScmInfoProvider scmProvider
-    @PackageScope AbstractCIInfoProvider ciProvider
+    private final ModelRegistry modelRegistry
+
+    @Inject
+    BuildInfoPlugin(ModelRegistry modelRegistry) {
+        this.modelRegistry = modelRegistry
+    }
 
     void apply(Project project) {
         project.logger.info("Applying ${EXTENSION_NAME} plugin to project: ${project.name}")
@@ -64,56 +80,162 @@ class BuildInfoPlugin implements Plugin<Project> {
             initializeProvider(project)
         }
 
-        project.afterEvaluate {
+        if(modelRegistry != null && modelRegistry.state(ModelPath.nonNullValidatedPath('buildInfoData')) == null) {
+            modelRegistry.register(ModelRegistrations.bridgedInstance(
+                    ModelReference.of('buildInfoData', BuildInfoExtension.class), extension)
+                    .descriptor( 'Build info data').build())
+        }
+    }
+
+    @CompileStatic
+    static class BuildInfoRule extends RuleSource {
+        @Defaults
+        void configureComponentBuildPublishing(ModelMap<Task> tasks,
+                                               PublishingExtension publishing,
+                                               BuildInfoExtension extension) {
             if (extension.runOnCI) {
                 if (!extension.noJarInfo) {
-                    project.tasks.withType(Jar) { Jar jarTask ->
-                        def attributes = [
-                                'Created-By'            : "${infoProvider.javaRuntimeVersion} (${infoProvider.javaVendor})",
-                                'Build-Java-Version'    : infoProvider.javaVersion,
-                                'X-Compile-Source-JDK'  : infoProvider.javaSourceCompatibility ?: infoProvider.javaVersion.split('_')[0],
-                                'X-Compile-Target-JDK'  : infoProvider.javaTargetCompatibility ?: infoProvider.javaVersion.split('_')[0],
+                    tasks.withType(Jar.class, new Action<Jar>() {
 
-                                'Manifest-Version'      : '1.0',
-                                'Implementation-Title'  : "${infoProvider.projectModule ?: 'unknown'}",
-                                'Implementation-Version': "${infoProvider.projectVersion ?: 'unknown'}",
+                        @Override
+                        void execute(Jar jar) {
+                            log.info('Add buildinfo to pom manifest')
 
-                                'Build-Status'          : "${infoProvider.projectStatus ?: 'unknown'}",
-                                'Built-By'              : "${infoProvider.OSUser ?: 'unknown'}",
-                                'Built-OS'              : "${infoProvider.OSName ?: 'unknown'}",
-                                'Build-Date'            : "${infoProvider.OSTime ?: 'unknown'}",
-                                'Gradle-Version'        : "${infoProvider.gradleVersion ?: 'unknown'}",
-                                'Gradle-RootProject'    : "${infoProvider.rootProject ?: 'unknown'}",
+                            InfoProvider infoProvider = extension.infoProvider
+                            AbstractScmInfoProvider scmProvider = extension.scmProvider
+                            AbstractCIInfoProvider ciProvider = extension.ciProvider
 
-                                'Module-Origin'         : "${scmProvider.SCMOrigin ?: 'unknown'}",
-                                'SCM-change-info'       : "${scmProvider.SCMRevInfo ?: 'unknown'}",
-                                'SCM-change-time'       : "${scmProvider.lastChangeTime ?: 'unknown'}",
-                                'SCM-branch-name'       : "${scmProvider.branchName ?: 'unknown'}",
-                                'SCM-type'              : "${scmProvider.SCMType ?: 'unknown'}",
+                            def attributes = [
+                                    'Created-By'            : "${infoProvider.javaRuntimeVersion} (${infoProvider.javaVendor})",
+                                    'Build-Java-Version'    : infoProvider.javaVersion,
+                                    'X-Compile-Source-JDK'  : infoProvider.javaSourceCompatibility ?: infoProvider.javaVersion.split('_')[0],
+                                    'X-Compile-Target-JDK'  : infoProvider.javaTargetCompatibility ?: infoProvider.javaVersion.split('_')[0],
 
-                                'CI-build-host'         : "${ciProvider.buildHost ?: 'unknown'}",
-                                'CI-build-url'          : "${ciProvider.buildUrl ?: 'unknown'}",
-                                'CI-build-number'       : "${ciProvider.buildNumber ?: 'unknown'}",
-                                'CI-build-job'          : "${ciProvider.buildJob ?: 'unknown'}",
-                                'CI-build-time'         : "${ciProvider.buildTime ?: 'unknown'}"
-                        ]
+                                    'Manifest-Version'      : '1.0',
+                                    'Implementation-Title'  : "${infoProvider.projectModule ?: 'unknown'}",
+                                    'Implementation-Version': "${infoProvider.projectVersion ?: 'unknown'}",
 
-                        jarTask.inputs.properties(attributes)
+                                    'Build-Status'          : "${infoProvider.projectStatus ?: 'unknown'}",
+                                    'Built-By'              : "${infoProvider.OSUser ?: 'unknown'}",
+                                    'Built-OS'              : "${infoProvider.OSName ?: 'unknown'}",
+                                    'Build-Date'            : "${infoProvider.OSTime ?: 'unknown'}",
+                                    'Gradle-Version'        : "${infoProvider.gradleVersion ?: 'unknown'}",
+                                    'Gradle-RootProject'    : "${infoProvider.rootProject ?: 'unknown'}",
 
-                        jarTask.doFirst {
-                            project.logger.info("Add buildinfo to manifest")
-                            jarTask.manifest.attributes.putAll(attributes)
+                                    'Module-Origin'         : "${scmProvider.SCMOrigin ?: 'unknown'}",
+                                    'SCM-change-info'       : "${scmProvider.SCMRevInfo ?: 'unknown'}",
+                                    'SCM-change-time'       : "${scmProvider.lastChangeTime ?: 'unknown'}",
+                                    'SCM-branch-name'       : "${scmProvider.branchName ?: 'unknown'}",
+                                    'SCM-type'              : "${scmProvider.SCMType ?: 'unknown'}",
+
+                                    'CI-build-host'         : "${ciProvider.buildHost ?: 'unknown'}",
+                                    'CI-build-url'          : "${ciProvider.buildUrl ?: 'unknown'}",
+                                    'CI-build-number'       : "${ciProvider.buildNumber ?: 'unknown'}",
+                                    'CI-build-job'          : "${ciProvider.buildJob ?: 'unknown'}",
+                                    'CI-build-time'         : "${ciProvider.buildTime ?: 'unknown'}"
+                            ]
+
+                            jar.inputs.properties(attributes)
+
+                            jar.doFirst {
+                                log.info("Add buildinfo to manifest")
+                                jar.manifest.attributes.putAll(attributes)
+                            }
                         }
-                    }
+                    })
                 }
-
                 if (!extension.noDescriptorInfo) {
-                    project.tasks.withType(GenerateIvyDescriptor) { GenerateIvyDescriptor ivyTask ->
-                        project.logger.info("Add buildinfo to ivy file")
-                        ivyTask.descriptor.withXml(new Action<XmlProvider>() {
-
+                    try {
+                        MavenPublication mvnPub = publishing.publications.maybeCreate('mvn', MavenPublication.class)
+                        mvnPub.pom.withXml(new Action<XmlProvider>() {
                             @Override
                             void execute(XmlProvider xmlProvider) {
+                                log.info('Add buildinfo to pom file')
+
+                                InfoProvider infoProvider = extension.infoProvider
+                                AbstractScmInfoProvider scmProvider = extension.scmProvider
+                                AbstractCIInfoProvider ciProvider = extension.ciProvider
+
+                                Element rootElement =  xmlProvider.asElement()
+                                org.w3c.dom.NodeList nl = rootElement.getElementsByTagName('properties')
+
+                                nl.each { org.w3c.dom.Node n -> rootElement.removeChild(n) }
+
+                                org.w3c.dom.Node propsNode = rootElement.appendChild(
+                                        rootElement.getOwnerDocument().createElement('properties'))
+
+                                addNode(propsNode, 'created-by',
+                                        "${infoProvider.javaRuntimeVersion} (${infoProvider.javaVendor})")
+                                addNode(propsNode,"build-java-version",
+                                        infoProvider.javaVersion)
+                                addNode(propsNode,'java-source-compatibility',
+                                        infoProvider.javaSourceCompatibility ?: infoProvider.javaVersion.split('_')[0])
+                                addNode(propsNode,'java-target-compatibility',
+                                        infoProvider.javaTargetCompatibility ?: infoProvider.javaVersion.split('_')[0])
+                                addNode(propsNode,'implementation-title',
+                                        infoProvider.projectModule)
+                                addNode(propsNode,'implementation-version',
+                                        infoProvider.projectVersion)
+                                addNode(propsNode,'build-status',
+                                        infoProvider.projectStatus)
+                                addNode(propsNode,'built-by',
+                                        infoProvider.OSUser)
+                                addNode(propsNode,'built-os',
+                                        infoProvider.OSName)
+                                addNode(propsNode,'build-date',
+                                        infoProvider.OSTime)
+                                addNode(propsNode,'gradle-version',
+                                        infoProvider.gradleVersion)
+                                addNode(propsNode,'gradle-rootproject',
+                                        infoProvider.rootProject)
+
+                                addNode(propsNode,'module-origin',
+                                        scmProvider.SCMOrigin)
+                                addNode(propsNode,'scm-change-info',
+                                        scmProvider.SCMRevInfo)
+                                addNode(propsNode,'scm-change-time',
+                                        scmProvider.lastChangeTime)
+                                addNode(propsNode,'scm-branch-name',
+                                        scmProvider.branchName)
+                                addNode(propsNode,'scm-type',
+                                        scmProvider.SCMType)
+
+                                addNode(propsNode,'ci-build-host',
+                                        ciProvider.buildHost)
+                                addNode(propsNode,'ci-build-url',
+                                        ciProvider.buildUrl)
+                                addNode(propsNode,'ci-build-number',
+                                        ciProvider.buildNumber)
+                                addNode(propsNode,'ci-build-job',
+                                        ciProvider.buildJob)
+                                addNode(propsNode,'ci-build-time',
+                                        ciProvider.buildTime)
+                            }
+
+                            private void addNode(org.w3c.dom.Node node, String name, String value) {
+                                Document document = node.getOwnerDocument()
+                                Element nelement = document.createElement(name)
+                                nelement.appendChild(document.createTextNode(value))
+
+                                node.appendChild(nelement)
+                            }
+                        })
+
+                    } catch(InvalidUserDataException ex ) {
+                        log.debug('Maven publishing was not applied to the project')
+                    }
+
+                    try {
+                        IvyPublication ivyPub = publishing.publications.maybeCreate('ivy', IvyPublication.class)
+                        ivyPub.descriptor.withXml(new Action<XmlProvider>() {
+                            @Override
+                            void execute(XmlProvider xmlProvider) {
+                                log.info('Add buildinfo to ivy file')
+
+                                InfoProvider infoProvider = extension.infoProvider
+                                AbstractScmInfoProvider scmProvider = extension.scmProvider
+                                AbstractCIInfoProvider ciProvider = extension.ciProvider
+
                                 xmlProvider.asElement().setAttribute('xmlns:e', 'http://ant.apache.org/ivy/extra')
 
                                 checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
@@ -203,7 +325,6 @@ class BuildInfoPlugin implements Plugin<Project> {
                                 checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
                                         'e:ci-build-time',
                                         ciProvider.buildTime)
-
                             }
 
                             private void checkNode(org.w3c.dom.Node node, String name, String value) {
@@ -219,78 +340,9 @@ class BuildInfoPlugin implements Plugin<Project> {
                                 infoElement.appendChild(nelement)
                             }
                         })
-                    }
-                    project.tasks.withType(GenerateMavenPom) { GenerateMavenPom pomGen ->
-                        project.logger.info("Add buildinfo to pom file")
-                        pomGen.pom.withXml(new Action<XmlProvider>() {
 
-                            @Override
-                            void execute(XmlProvider xmlProvider) {
-                                Element rootElement =  xmlProvider.asElement()
-                                org.w3c.dom.NodeList nl = rootElement.getElementsByTagName('properties')
-
-                                nl.each { org.w3c.dom.Node n -> rootElement.removeChild(n) }
-
-                                org.w3c.dom.Node propsNode = rootElement.appendChild(
-                                        rootElement.getOwnerDocument().createElement('properties'))
-
-                                addNode(propsNode, 'created-by',
-                                        "${infoProvider.javaRuntimeVersion} (${infoProvider.javaVendor})")
-                                addNode(propsNode,"build-java-version",
-                                        infoProvider.javaVersion)
-                                addNode(propsNode,'java-source-compatibility',
-                                        infoProvider.javaSourceCompatibility ?: infoProvider.javaVersion.split('_')[0])
-                                addNode(propsNode,'java-target-compatibility',
-                                        infoProvider.javaTargetCompatibility ?: infoProvider.javaVersion.split('_')[0])
-                                addNode(propsNode,'implementation-title',
-                                        infoProvider.projectModule)
-                                addNode(propsNode,'implementation-version',
-                                        infoProvider.projectVersion)
-                                addNode(propsNode,'build-status',
-                                        infoProvider.projectStatus)
-                                addNode(propsNode,'built-by',
-                                        infoProvider.OSUser)
-                                addNode(propsNode,'built-os',
-                                        infoProvider.OSName)
-                                addNode(propsNode,'build-date',
-                                        infoProvider.OSTime)
-                                addNode(propsNode,'gradle-version',
-                                        infoProvider.gradleVersion)
-                                addNode(propsNode,'gradle-rootproject',
-                                        infoProvider.rootProject)
-
-                                addNode(propsNode,'module-origin',
-                                        scmProvider.SCMOrigin)
-                                addNode(propsNode,'scm-change-info',
-                                        scmProvider.SCMRevInfo)
-                                addNode(propsNode,'scm-change-time',
-                                        scmProvider.lastChangeTime)
-                                addNode(propsNode,'scm-branch-name',
-                                        scmProvider.branchName)
-                                addNode(propsNode,'scm-type',
-                                        scmProvider.SCMType)
-
-                                addNode(propsNode,'ci-build-host',
-                                        ciProvider.buildHost)
-                                addNode(propsNode,'ci-build-url',
-                                        ciProvider.buildUrl)
-                                addNode(propsNode,'ci-build-number',
-                                        ciProvider.buildNumber)
-                                addNode(propsNode,'ci-build-job',
-                                        ciProvider.buildJob)
-                                addNode(propsNode,'ci-build-time',
-                                        ciProvider.buildTime)
-
-                            }
-
-                            private void addNode(org.w3c.dom.Node node, String name, String value) {
-                                Document document = node.getOwnerDocument()
-                                Element nelement = document.createElement(name)
-                                nelement.appendChild(document.createTextNode(value))
-
-                                node.appendChild(nelement)
-                            }
-                        })
+                    } catch(InvalidUserDataException ex ) {
+                        log.debug('Ivy publishing was not applied to the project')
                     }
                 }
             }
@@ -306,34 +358,31 @@ class BuildInfoPlugin implements Plugin<Project> {
     @CompileStatic
     private void initializeProvider(Project project) {
         if (System.getenv('bamboo_buildResultsUrl')) {
-            ciProvider = new BambooCIInfoProvider(project.projectDir)
+            extension.ciProvider = new BambooCIInfoProvider(project.projectDir)
         } else if (System.getenv('JENKINS_URL')) {
-            ciProvider = new JenkinsCIInfoProvider(project.projectDir)
+            extension.ciProvider = new JenkinsCIInfoProvider(project.projectDir)
         } else if (System.getenv('CI_BUILD_ID')) {
-            ciProvider = new GitlabCIInfoProvider(project.projectDir)
+            extension.ciProvider = new GitlabCIInfoProvider(project.projectDir)
         } else if (System.getenv('TRAVIS')) {
-            ciProvider = new TravisCIInfoProvider(project.projectDir)
+            extension.ciProvider = new TravisCIInfoProvider(project.projectDir)
         } else {
-            ciProvider = new UnknownCIInfoProvider(project.projectDir)
+            extension.ciProvider = new UnknownCIInfoProvider(project.projectDir)
         }
 
         File gitDir = new File(project.rootDir, '.git')
         File svnDir = new File(project.rootDir, '.svn')
+
         if (gitDir.directory) {
-            scmProvider = new GitScmInfoProvider(project.projectDir)
+            extension.scmProvider = new GitScmInfoProvider(project.projectDir)
             if (System.getenv('bamboo_buildResultsUrl')) {
-                ((GitScmInfoProvider)scmProvider).bambooBuild = true
+                ((GitScmInfoProvider)extension.scmProvider).bambooBuild = true
             }
         } else if (svnDir.directory) {
-            scmProvider = new SvnScmInfoProvider(project.projectDir)
+            extension.scmProvider = new SvnScmInfoProvider(project.projectDir)
         } else {
-            scmProvider = new UnknownScmInfoProvider(project.projectDir)
+            extension.scmProvider = new UnknownScmInfoProvider(project.projectDir)
         }
 
-        infoProvider = new InfoProvider(project)
-
-        extension.ciProvider = ciProvider
-        extension.scmProvider = scmProvider
-        extension.infoProvider = infoProvider
+        extension.infoProvider = new InfoProvider(project)
     }
 }
