@@ -47,8 +47,6 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
             sourceCompatibility = 1.8
             targetCompatibility = 1.8
 
-            buildinfo.noJarInfo = false
-
             publishing {
                 repositories {
                     ivy {
@@ -179,8 +177,6 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
             sourceCompatibility = 1.8
             targetCompatibility = 1.8
 
-            buildinfo.noJarInfo = false
-
             publishing {
                 repositories {
                     ivy {
@@ -253,8 +249,6 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
             sourceCompatibility = 1.8
             targetCompatibility = 1.8
 
-            buildinfo.noJarInfo = false
-
             publishing {
                 repositories {
                     maven {
@@ -326,8 +320,6 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
 
             sourceCompatibility = 1.8
             targetCompatibility = 1.8
-
-            buildinfo.noJarInfo = false
 
             publishing {
                 repositories {
