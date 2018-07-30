@@ -1,5 +1,5 @@
 = Buildinfo Plugin
-:latestRevision: 3.2.0
+:latestRevision: 4.0.0
 :toc:
 
 NOTE: Version 3 of this plugin will only work with Gradle 4 and JDK 8.
@@ -20,7 +20,7 @@ plugins {
 }
 ----
 
-If a system or environment variable `RUNONCI` or the project property `runOnCI` is specified the plugin will add some CI specific information to code artifacts.
+This plugin will be activated if a system or environment variable `RUNONCI` or the project property `runOnCI` is specified.
 
 == Project Extension 'buildinfo'
 This plugin adds an extension *`buildinfo`* to the project.  This extension contains all plugin configurations.
