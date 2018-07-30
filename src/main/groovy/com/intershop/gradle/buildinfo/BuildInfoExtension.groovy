@@ -33,8 +33,8 @@ class BuildInfoExtension {
     public final static String RUNONCI_ENV = 'RUNONCI'
     public final static String RUNONCI_PRJ = 'runOnCI'
 
-    public final static String NOJARINFO_ENV = 'NOJARINFO'
-    public final static String NOJARINFO_PRJ = 'noJarInfo'
+    public final static String ADDJARINFO_ENV = 'ADDITIONALJARINFO'
+    public final static String ADDJARINFO_PRJ = 'additionalJarInfo'
 
     public final static String NODESCRIPTORINFO_ENV = 'NODESCRIPTORINFO'
     public final static String NODESCRIPTORINFO_PRJ = 'noDescriptorInfo'
@@ -50,9 +50,9 @@ class BuildInfoExtension {
             log.warn('Buildinfo task will be executed on a CI build environment for {}.', project.name)
         }
 
-        noJarInfo = Boolean.parseBoolean(getVariable(NOJARINFO_ENV, NOJARINFO_PRJ, 'true'))
-        if(noJarInfo) {
-            log.info('No information will be attached to jar files of {}.', project.name)
+        additionalJarInfo = Boolean.parseBoolean(getVariable(ADDJARINFO_ENV, ADDJARINFO_PRJ, 'false'))
+        if(additionalJarInfo) {
+            log.info('Additional information will be attached to jar files of {}.', project.name)
         }
 
         noDescriptorInfo = Boolean.parseBoolean(getVariable(NODESCRIPTORINFO_ENV, NODESCRIPTORINFO_PRJ, 'false'))
@@ -75,7 +75,7 @@ class BuildInfoExtension {
      * <p>Can be configured/overwritten with environment variable NOJARINFO;
      * java environment NOJARINFO or project variable noJarInfo</p>
      */
-    boolean noJarInfo
+    boolean additionalJarInfo
 
     /**
      * <p>Configuration for the execution on the CI server without stored infomation in descriptor files (ivy,pom)</p>
@@ -84,6 +84,12 @@ class BuildInfoExtension {
      * java environment NODESCRIPTORINFO or project variable noDescriptorInfo</p>
      */
     boolean noDescriptorInfo
+
+    /**
+     * The name of the vendor.
+     * This information is always added to the JAR if it is configured.
+     */
+    String moduleVendor
 
     /**
      * Basic info provider

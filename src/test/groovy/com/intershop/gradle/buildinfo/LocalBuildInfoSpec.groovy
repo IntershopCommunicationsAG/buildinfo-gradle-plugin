@@ -26,7 +26,7 @@ import static org.junit.Assert.assertTrue
 @Slf4j
 class LocalBuildInfoSpec extends AbstractIntegrationSpec {
 
-    def 'Add BuildInfo To Jar - #gradleVersion'(gradleVersion) {
+    def 'Add BuildInfo To Jar (Gradle #gradleVersion)'(gradleVersion) {
         given:
         writeJavaTestClass('com.intershop.test')
 
@@ -88,7 +88,8 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
 
         then:
         secResult.output.contains('Add buildinfo to ivy file')
-        secResult.output.contains('Add buildinfo to manifest')
+        ! secResult.output.contains('Add buildinfo to manifest')
+        ! result.output.contains('Buildinfo for manifest will be extended!')
         (new File(testProjectDir, 'build/repo/com.test/test/1.0.0.0/ivy-1.0.0.0.xml')).exists()
 
         String secIvyFileContents = new File(testProjectDir,  'build/repo/com.test/test/1.0.0.0/ivy-1.0.0.0.xml').text
@@ -100,7 +101,7 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
         gradleVersion << supportedGradleVersions
     }
 
-    def 'No BuildInfo To Jar with runOnCI - #gradleVersion'(gradleVersion) {
+    def 'No BuildInfo To Jar with runOnCI (Gradle #gradleVersion)'(gradleVersion) {
         given:
         writeJavaTestClass('com.intershop.test')
 
@@ -138,13 +139,14 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
 
         when:
         def result = getPreparedGradleRunner()
-                .withArguments('publish', '-PrunOnCI=true', '-PnoJarInfo=true', '--stacktrace', '-i')
+                .withArguments('clean', 'publish', '-PrunOnCI=true', '-PadditionalJarInfo=true', '--stacktrace', '-i')
                 .withGradleVersion(gradleVersion)
                 .build()
 
         then:
         result.output.contains('Add buildinfo to ivy file')
-        ! result.output.contains('Add buildinfo to manifest')
+        result.output.contains('Add buildinfo to manifest')
+        result.output.contains('Buildinfo for manifest will be extended!')
         (new File(testProjectDir, 'build/repo/com.test/test/1.0.0.0/ivy-1.0.0.0.xml')).exists()
 
         String ivyFileContents = new File(testProjectDir,  'build/repo/com.test/test/1.0.0.0/ivy-1.0.0.0.xml').text
@@ -152,27 +154,11 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
 
         1 == ivyFileContents.count('<e:scm-type>local</e:scm-type>')
 
-        when:
-        def secResult = getPreparedGradleRunner()
-                .withArguments('publish', '-PrunOnCI=true', '-PnoJarInfo=true', '--stacktrace', '-i')
-                .withGradleVersion(gradleVersion)
-                .build()
-
-        then:
-        secResult.output.contains('Add buildinfo to ivy file')
-        ! secResult.output.contains('Add buildinfo to manifest')
-        (new File(testProjectDir, 'build/repo/com.test/test/1.0.0.0/ivy-1.0.0.0.xml')).exists()
-
-        String secIvyFileContents = new File(testProjectDir,  'build/repo/com.test/test/1.0.0.0/ivy-1.0.0.0.xml').text
-        assertTrue(secIvyFileContents.contains('com.test:test:1.0.0.0'))
-
-        1 == secIvyFileContents.count('<e:scm-type>local</e:scm-type>')
-
         where:
         gradleVersion << supportedGradleVersions
     }
 
-    def 'No BuildInfo To Ivy with runOnCI - #gradleVersion'(gradleVersion) {
+    def 'No BuildInfo To Ivy with runOnCI (Gradle #gradleVersion)'(gradleVersion) {
         given:
         writeJavaTestClass('com.intershop.test')
 
@@ -246,7 +232,7 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
         gradleVersion << supportedGradleVersions
     }
 
-    def 'No BuildInfo To POM with runOnCI - #gradleVersion'(gradleVersion) {
+    def 'No BuildInfo To POM with runOnCI (Gradle #gradleVersion)'(gradleVersion) {
         given:
         writeJavaTestClass('com.intershop.test')
 
@@ -320,7 +306,7 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
         gradleVersion << supportedGradleVersions
     }
 
-    def 'Add BuildInfo To POM - #gradleVersion'(gradleVersion) {
+    def 'Add BuildInfo To POM (Gradle #gradleVersion)'(gradleVersion) {
         given:
         writeJavaTestClass('com.intershop.test')
 
@@ -394,7 +380,7 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
         gradleVersion << supportedGradleVersions
     }
 
-    def 'No BuildInfo To Jar - #gradleVersion'(gradleVersion) {
+    def 'No BuildInfo To Jar (Gradle #gradleVersion)'(gradleVersion) {
         given:
         writeJavaTestClass('com.intershop.test')
 
@@ -436,7 +422,8 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
         then:
         ! result.output.contains('Add buildinfo to pom file')
         ! result.output.contains('Add buildinfo to ivy file')
-        ! result.output.contains('Add buildinfo to manifest')
+        ! result.output.contains('Buildinfo for manifest will be extended!')
+        result.output.contains('Add buildinfo to manifest')
         (new File(testProjectDir, 'build/repo/com.test/test/1.0.0.0/ivy-1.0.0.0.xml')).exists()
 
         String ivyFileContents = new File(testProjectDir, 'build/repo/com.test/test/1.0.0.0/ivy-1.0.0.0.xml').text
