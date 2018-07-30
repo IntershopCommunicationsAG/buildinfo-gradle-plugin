@@ -1,5 +1,5 @@
 = Buildinfo Plugin
-:latestRevision: 3.0.0
+:latestRevision: 4.0.0
 :toc:
 
 == Summary
@@ -29,7 +29,7 @@ This plugin adds an extension *`buildinfo`* to the project.  This extension cont
 |Property           | Type      | Default value | Description
 |*runOnCI*          |`boolean`  | false         | This configuration must be true, if the project is used on a CI server. +
                                                   _This can be overwritten by the system or environment variable `RUNONCI` or project property `runOnCI`._
-|*noJarInfo*        |`boolean`  | false         | If this value is true the build information is not stored in the jar file.  +
+|*noJarInfo*        |`boolean`  | true          | If this value is true the build information is not stored in the jar file.  +
                                                   _This can be overwritten by the system or environment variable `NOJARINFO` or project property `noJarInfo`._
 |*noDescriptorInfo* |`boolean`  | false         | If this value is true the build information is not stored in a descriptor file (ivy/pom).  +
                                                   _This can be overwritten by the system or environment variable `noDescriptorInfo` or project property `noDescriptorInfo`._
