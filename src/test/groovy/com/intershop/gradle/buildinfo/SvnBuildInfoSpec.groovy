@@ -22,9 +22,12 @@ import org.tmatesoft.svn.core.wc.SVNWCUtil
 import org.tmatesoft.svn.core.wc2.SvnCheckout
 import org.tmatesoft.svn.core.wc2.SvnOperationFactory
 import org.tmatesoft.svn.core.wc2.SvnTarget
+import spock.lang.Ignore
 import spock.lang.Requires
 import spock.lang.Specification
 
+// svn test project is not accessible
+@Ignore
 class SvnBuildInfoSpec extends Specification {
 
     @TestDir
