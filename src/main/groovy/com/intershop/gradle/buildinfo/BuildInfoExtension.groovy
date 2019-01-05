@@ -31,18 +31,31 @@ class BuildInfoExtension {
     public final static String RUNONCI_ENV = 'RUNONCI'
     public final static String RUNONCI_PRJ = 'runOnCI'
 
+    public final static String NOJARINFO_ENV = 'NOJARINFO'
+    public final static String NOJARINFO_PRJ = 'noJarInfo'
+
+    public final static String NODESCRIPTORINFO_ENV = 'NODESCRIPTORINFO'
+    public final static String NODESCRIPTORINFO_PRJ = 'noDescriptorInfo'
+
     final private Project project
 
     BuildInfoExtension(Project project) {
 
         this.project = project
 
-        // init default value for runOnCI
-        if(! runOnCI) {
-            runOnCI = Boolean.parseBoolean(getVariable(RUNONCI_ENV, RUNONCI_PRJ, 'false'))
-            if(runOnCI) {
-                log.warn('Buildinfo task will be executed on a CI build environment for {}.', project.name)
-            }
+        runOnCI = Boolean.parseBoolean(getVariable(RUNONCI_ENV, RUNONCI_PRJ, 'false'))
+        if(runOnCI) {
+            log.warn('Buildinfo task will be executed on a CI build environment for {}.', project.name)
+        }
+
+        noJarInfo = Boolean.parseBoolean(getVariable(NOJARINFO_ENV, NOJARINFO_PRJ, 'false'))
+        if(noJarInfo) {
+            log.info('No information will be attached to jar files of {}.', project.name)
+        }
+
+        noDescriptorInfo = Boolean.parseBoolean(getVariable(NODESCRIPTORINFO_ENV, NODESCRIPTORINFO_PRJ, 'false'))
+        if(noDescriptorInfo) {
+            log.info('No information will be attached to descriptor files of {}.', project.name)
         }
     }
 
@@ -53,6 +66,22 @@ class BuildInfoExtension {
      * java environment RUNONCI or project variable runOnCI</p>
      */
     boolean runOnCI
+
+    /**
+     * <p>Configuration for the execution on the CI server without stored infomation in jar files</p>
+     *
+     * <p>Can be configured/overwritten with environment variable NOJARINFO;
+     * java environment NOJARINFO or project variable noJarInfo</p>
+     */
+    boolean noJarInfo
+
+    /**
+     * <p>Configuration for the execution on the CI server without stored infomation in descriptor files (ivy,pom)</p>
+     *
+     * <p>Can be configured/overwritten with environment variable NODESCRIPTORINFO;
+     * java environment NODESCRIPTORINFO or project variable noDescriptorInfo</p>
+     */
+    boolean noDescriptorInfo
 
     /**
      * Basic info provider

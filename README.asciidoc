@@ -1,5 +1,5 @@
 = Buildinfo Plugin
-:latestRevision: 1.0.0
+:latestRevision: 2.3.1
 :toc:
 
 == Summary
@@ -24,11 +24,15 @@ This plugin will be activated if a system or environment variable `RUNONCI` or t
 This plugin adds an extension *`buildinfo`* to the project.  This extension contains all plugin configurations.
 
 === Properties
-[cols="17%,17%,17%,17%,51%", width="90%, options="header"]
+[cols="10%,10%,10%,80%", width="90%, options="header"]
 |===
-|Property | Type | Default value | Values | Description
-|*runOnCI* |`boolean`  | false | | This configuration must be true, if the project is used on a CI server. +
-                                 _This can be overwritten by the system or environment variable `RUNONCI` or project property `runOnCI`._
+|Property           | Type      | Default value | Description
+|*runOnCI*          |`boolean`  | false         | This configuration must be true, if the project is used on a CI server. +
+                                                  _This can be overwritten by the system or environment variable `RUNONCI` or project property `runOnCI`._
+|*noJarInfo*        |`boolean`  | false         | If this value is true the build information is not stored in the jar file.  +
+                                                  _This can be overwritten by the system or environment variable `NOJARINFO` or project property `noJarInfo`._
+|*noDescriptorInfo* |`boolean`  | false         | If this value is true the build information is not stored in a descriptor file (ivy/pom).  +
+                                                  _This can be overwritten by the system or environment variable `noDescriptorInfo` or project property `noDescriptorInfo`._
 |===
 
 == Example Build Information

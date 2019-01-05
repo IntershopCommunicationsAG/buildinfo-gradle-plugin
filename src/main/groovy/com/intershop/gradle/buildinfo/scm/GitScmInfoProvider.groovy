@@ -15,16 +15,12 @@
  */
 package com.intershop.gradle.buildinfo.scm
 
+import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
-
-import org.eclipse.jgit.lib.Config
-import org.eclipse.jgit.lib.Constants
-import org.eclipse.jgit.lib.ObjectId
-import org.eclipse.jgit.lib.Repository
-import org.eclipse.jgit.lib.RepositoryBuilder
+import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.lib.*
 import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.revwalk.RevWalk
-
 /**
  * This info provider provides the information of the used Git repository.
  */
@@ -48,6 +44,7 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
     {
         return new RepositoryBuilder().findGitDir(projectDir).build()
     }
+
     /**
      * Returns Remote URL of the project (read only)
      * @return remote url
@@ -75,9 +72,28 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
      * Returns branch name of the working copy (read only)
      * @return branch name
      */
+    @CompileDynamic
     @Override
     String getBranchName() {
-        return getGitRepo().branch
+        Repository gitRepo = getGitRepo()
+        String rv = gitRepo.branch
+
+        Git git = new Git(gitRepo)
+        List<Ref> refList = git.tagList().call()
+
+        refList.any {Ref ref ->
+            Ref peeledRef = gitRepo.peel(ref)
+            String hashID =  ref.getObjectId()
+            if(peeledRef.getPeeledObjectId() != null) {
+                hashID = peeledRef.getPeeledObjectId().getName()
+            }
+            if(hashID == rv) {
+                rv = ref.getName()
+                return true
+            }
+        }
+
+        return rv.split('/').last()
     }
 
     /**

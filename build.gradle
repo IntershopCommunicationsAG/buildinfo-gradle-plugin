@@ -9,7 +9,7 @@ plugins {
     id 'idea'
 
     // intershop test plugin
-    id 'com.intershop.gradle.test' version '1.0.0'
+    id 'com.intershop.gradle.test' version '2.2.0'
 
     // plugin for documentation
     id 'org.asciidoctor.convert' version '1.5.3'
@@ -18,10 +18,13 @@ plugins {
     id 'maven-publish'
 
     // intershop version plugin
-    id 'com.intershop.gradle.scmversion' version '1.0.1'
+    id 'com.intershop.gradle.scmversion' version '2.3.4'
 
     // plugin for publishing to Gradle Portal
-    id 'com.gradle.plugin-publish' version '0.9.4'
+    id 'com.gradle.plugin-publish' version '0.9.7'
+
+    // plugin for publishing to jcenter
+    id 'com.jfrog.bintray' version '1.7.3'
 }
 
 scm {
@@ -35,8 +38,6 @@ group 'com.intershop.gradle.buildinfo'
 description 'Gradle Buildinfo Plugin'
 version = scm.version.version
 
-// plugins should work with JDK 1.7 aslong
-// older INTERSHOP version use this version of JDK
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
@@ -73,7 +74,7 @@ test {
     //Change directory for gradle tests
     systemProperty 'org.gradle.native.dir', '.gradle'
     //Set supported Gradle version
-    systemProperty 'intershop.gradle.versions', '2.10,2.11'
+    systemProperty 'intershop.gradle.versions', '2.11, 3.4'
 }
 
 task copyAsciiDoc {
@@ -182,6 +183,36 @@ publishing {
 }
 
 publish.dependsOn asciidoctor
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    pkg {
+        repo = 'maven'
+        name = project.name
+        userOrg = 'intershopcommunicationsag'
+
+        licenses = ['Apache-2.0']
+        vcsUrl = "https://github.com/IntershopCommunicationsAG/${project.name}"
+
+        desc = project.description
+        websiteUrl = "https://github.com/IntershopCommunicationsAG/${project.name}"
+        issueTrackerUrl = "https://github.com/IntershopCommunicationsAG/${project.name}/issues"
+
+        labels = ['intershop', 'gradle', 'plugin', 'test']
+        publicDownloadNumbers = true
+
+        version {
+            name = project.version
+            desc = "${project.description} ${project.version}"
+            released  = new Date()
+            vcsTag = project.version
+        }
+
+        publications = ['intershopMvn']
+    }
+}
+
 bintrayUpload.dependsOn asciidoctor
 
 pluginBundle {
@@ -201,13 +232,18 @@ pluginBundle {
 dependencies {
     //svn
     // replace svnkit's JNA 4.x with 3.2.7, which is used by Gradle itself
-    compile('org.tmatesoft.svnkit:svnkit:1.8.12') {
+    compile('org.tmatesoft.svnkit:svnkit:1.8.15') {
         exclude group: 'net.java.dev.jna'
+        exclude group: 'com.trilead', module: 'trilead-ssh2'
     }
+    compile 'com.trilead:trilead-ssh2:1.0.0-build220'
     runtime 'net.java.dev.jna:jna:3.2.7'
 
     //jgit
-    compile 'org.eclipse.jgit:org.eclipse.jgit:4.2.0.201601211800-r'
+    compile('org.eclipse.jgit:org.eclipse.jgit:4.5.0.201609210915-r') {
+        exclude group: 'org.apache.httpcomponents', module: 'httpclient'
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+    }
 
     testCompile('org.spockframework:spock-core:1.0-groovy-2.4') {
         exclude group: 'org.codehaus.groovy'
