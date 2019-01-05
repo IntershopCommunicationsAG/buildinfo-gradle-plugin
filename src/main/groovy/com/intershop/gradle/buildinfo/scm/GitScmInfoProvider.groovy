@@ -36,20 +36,18 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
      */
     boolean bambooBuild = false
 
-    /*
-     * Git repo object for all methods of this provider.
-     */
-    private final Repository gitRepo
-
     /**
      * Constructs the Git information provider
      * @param projectDir
      */
     GitScmInfoProvider(File projectDir) {
         super(projectDir)
-        gitRepo = new RepositoryBuilder().findGitDir(projectDir).build()
     }
 
+    private Repository getGitRepo()
+    {
+        return new RepositoryBuilder().findGitDir(projectDir).build()
+    }
     /**
      * Returns Remote URL of the project (read only)
      * @return remote url
@@ -61,7 +59,7 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
             origin = System.getenv('bamboo_planRepository_repositoryUrl')
         }
         if(! origin) {
-            Config config = gitRepo.config
+            Config config = getGitRepo().config
             String rv = config.getString('remote', 'origin', 'url')
 
             if (rv && rv.startsWith('https://') && rv.contains('@')) {
@@ -79,7 +77,7 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
      */
     @Override
     String getBranchName() {
-        return gitRepo.branch
+        return getGitRepo().branch
     }
 
     /**
@@ -88,7 +86,7 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
      */
     @Override
     String getSCMRevInfo() {
-        ObjectId id = gitRepo.resolve(Constants.HEAD)
+        ObjectId id = getGitRepo().resolve(Constants.HEAD)
         String rv = ''
 
         if(id) {
@@ -106,7 +104,7 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
     String getLastChangeTime() {
         if(SCMRevInfo) {
             RevWalk walk = new RevWalk(gitRepo)
-            RevCommit commit = walk.parseCommit(gitRepo.resolve(Constants.HEAD))
+            RevCommit commit = walk.parseCommit(getGitRepo().resolve(Constants.HEAD))
             return new Date( ((long)commit.commitTime)*1000).format("yyyyMMddHHmmss")
         }
         return ''
