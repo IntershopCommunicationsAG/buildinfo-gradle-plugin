@@ -38,6 +38,11 @@ class SvnScmInfoProvider extends AbstractScmInfoProvider {
      */
     private final SVNWCClient svnClient
 
+    private String pOrigin = ''
+    private String pBranchName = ''
+    private String pRevInfo = ''
+    private String pChangeTime = ''
+
     /**
      * Constructs the SVN information provider
      * @param projectDir
@@ -67,11 +72,15 @@ class SvnScmInfoProvider extends AbstractScmInfoProvider {
      */
     @Override
     String getSCMOrigin() {
-        if(info) {
-            String rv = info.getURL().toString()
-            return rv
+        if(info && ! pOrigin ) {
+            pOrigin = info.getURL().toString()
         }
-        return ''
+
+        if(! pOrigin) {
+            pOrigin = UNKNOWN
+        }
+
+        return pOrigin
     }
 
     /**
@@ -80,22 +89,19 @@ class SvnScmInfoProvider extends AbstractScmInfoProvider {
      */
     @Override
     String getBranchName() {
-        String url = getSCMOrigin()
-        String rv = ''
-        if(url) {
-            List splitPath = Arrays.asList(url.split('/'))
-
-            rv = 'trunk'
+        if(! getSCMOrigin().equals(UNKNOWN) && ! pBranchName) {
+            List splitPath = Arrays.asList(getSCMOrigin().split('/'))
+            pBranchName = 'trunk'
             // if svn URL contains "/tags/", then find the name of the branch
-            if (url.contains('/tags/') && splitPath.indexOf('tags') < splitPath.size() - 1) {
-                rv = "tags/${splitPath[splitPath.indexOf('tags') + 1]}"
+            if (getSCMOrigin().contains('/tags/') && splitPath.indexOf('tags') < splitPath.size() - 1) {
+                pBranchName = "tags/${splitPath[splitPath.indexOf('tags') + 1]}"
             }
             // if svn URL contains "/branches/", then find the name of the branch
-            if (url.contains('/branches/') && splitPath.indexOf('branches') < splitPath.size() - 1) {
-                rv = "branches/${splitPath[splitPath.indexOf('branches') + 1]}"
+            if (getSCMOrigin().contains('/branches/') && splitPath.indexOf('branches') < splitPath.size() - 1) {
+                pBranchName = "branches/${splitPath[splitPath.indexOf('branches') + 1]}"
             }
         }
-        return rv
+        return pBranchName
     }
 
     /**
@@ -104,11 +110,14 @@ class SvnScmInfoProvider extends AbstractScmInfoProvider {
      */
     @Override
     String getSCMRevInfo() {
-        if(info) {
+        if(info && ! pRevInfo ) {
             SVNRevision rev = info.revision
-            return rev.number
+            pRevInfo = rev.number
         }
-        return ''
+        if (! pRevInfo) {
+            pRevInfo = UNKNOWN
+        }
+        return pRevInfo
     }
 
     /**
@@ -117,14 +126,15 @@ class SvnScmInfoProvider extends AbstractScmInfoProvider {
      */
     @Override
     String getLastChangeTime() {
-        if(info) {
+        if(info && ! pChangeTime ) {
             SVNRevision rev = info.revision
             String rv = rev?.date?.format('yyyyMMddHHmmss')
-            if(rv) {
-                return rv
-            }
+            pChangeTime = rv ? rv : UNKNOWN
         }
-        return '-'
+        if(! pChangeTime) {
+            pChangeTime = UNKNOWN
+        }
+        return pChangeTime
     }
 
     /**

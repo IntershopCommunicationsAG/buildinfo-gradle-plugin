@@ -148,7 +148,7 @@ class GitBuildInfoSpec extends Specification {
         String origin = provider.SCMOrigin
 
         then:
-        origin == null
+        origin == 'unknown'
 
         when:
         String branch = provider.branchName
@@ -160,13 +160,13 @@ class GitBuildInfoSpec extends Specification {
         String rev = provider.SCMRevInfo
 
         then:
-        rev == ''
+        rev == 'unknown'
 
         when:
         String time = provider.lastChangeTime
 
         then:
-        time == ''
+        time == 'unknown'
 
         when:
         String type = provider.SCMType

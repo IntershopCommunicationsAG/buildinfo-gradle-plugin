@@ -32,17 +32,21 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
      */
     boolean bambooBuild = false
 
+    private final Repository gitRepo
+
+    private String pOrigin = ''
+    private String pBranchName = ''
+    private String pRevInfo = ''
+    private String pChangeTime = ''
+
     /**
      * Constructs the Git information provider
      * @param projectDir
      */
     GitScmInfoProvider(File projectDir) {
         super(projectDir)
-    }
 
-    private Repository getGitRepo()
-    {
-        return new RepositoryBuilder().findGitDir(projectDir).build()
+        gitRepo = new RepositoryBuilder().findGitDir(projectDir).build()
     }
 
     /**
@@ -51,21 +55,22 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
      */
     @Override
     String getSCMOrigin() {
-        String origin = ''
-        if(bambooBuild) {
-            origin = System.getenv('bamboo_planRepository_repositoryUrl')
-        }
-        if(! origin) {
-            Config config = getGitRepo().config
-            String rv = config.getString('remote', 'origin', 'url')
+        if(! pOrigin) {
+            if (bambooBuild) {
+                pOrigin = System.getenv('bamboo_planRepository_repositoryUrl')
+            }
+            if (! pOrigin) {
+                Config config = gitRepo.config
+                String rv = config.getString('remote', 'origin', 'url')
 
-            if (rv && rv.startsWith('https://') && rv.contains('@')) {
-                origin = "https://${rv.substring(rv.indexOf('@') + 1)}"
-            } else {
-                origin = rv
+                if (rv && rv.startsWith('https://') && rv.contains('@')) {
+                    pOrigin = "https://${rv.substring(rv.indexOf('@') + 1)}"
+                } else {
+                    pOrigin = rv ? rv : UNKNOWN
+                }
             }
         }
-        return origin
+        return pOrigin
     }
 
     /**
@@ -75,25 +80,28 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
     @CompileDynamic
     @Override
     String getBranchName() {
-        Repository gitRepo = getGitRepo()
-        String rv = gitRepo.branch
+        if(! pBranchName) {
+            String rv = gitRepo.branch
 
-        Git git = new Git(gitRepo)
-        List<Ref> refList = git.tagList().call()
+            Git git = new Git(gitRepo)
+            List<Ref> refList = git.tagList().call()
 
-        refList.any {Ref ref ->
-            Ref peeledRef = gitRepo.peel(ref)
-            String hashID =  ref.getObjectId()
-            if(peeledRef.getPeeledObjectId() != null) {
-                hashID = peeledRef.getPeeledObjectId().getName()
+            refList.any { Ref ref ->
+                Ref peeledRef = gitRepo.peel(ref)
+                String hashID = ref.getObjectId()
+                if (peeledRef.getPeeledObjectId() != null) {
+                    hashID = peeledRef.getPeeledObjectId().getName()
+                }
+                if (hashID == rv) {
+                    rv = ref.getName()
+                    return true
+                }
             }
-            if(hashID == rv) {
-                rv = ref.getName()
-                return true
-            }
+
+            pBranchName = rv.split('/').last()
         }
 
-        return rv.split('/').last()
+        return pBranchName
     }
 
     /**
@@ -102,14 +110,16 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
      */
     @Override
     String getSCMRevInfo() {
-        ObjectId id = getGitRepo().resolve(Constants.HEAD)
-        String rv = ''
+        if(! pRevInfo) {
+            ObjectId id = gitRepo.resolve(Constants.HEAD)
 
-        if(id) {
-            rv = id.name?.substring(0,7)
+            if (id) {
+                pRevInfo = id.name?.substring(0, 7)
+            } else {
+                pRevInfo = UNKNOWN
+            }
         }
-
-        return rv
+        return pRevInfo
     }
 
     /**
@@ -118,12 +128,14 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
      */
     @Override
     String getLastChangeTime() {
-        if(SCMRevInfo) {
+        if(! getSCMRevInfo().equals('unknown')) {
             RevWalk walk = new RevWalk(gitRepo)
-            RevCommit commit = walk.parseCommit(getGitRepo().resolve(Constants.HEAD))
-            return new Date( ((long)commit.commitTime)*1000).format("yyyyMMddHHmmss")
+            RevCommit commit = walk.parseCommit(gitRepo.resolve(Constants.HEAD))
+            pChangeTime = new Date( ((long)commit.commitTime)*1000).format("yyyyMMddHHmmss")
+        } else {
+            pChangeTime = UNKNOWN
         }
-        return ''
+        return pChangeTime
     }
 
     /**

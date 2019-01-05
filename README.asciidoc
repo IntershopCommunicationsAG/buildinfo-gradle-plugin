@@ -1,5 +1,5 @@
 = Buildinfo Plugin
-:latestRevision: 2.3.1
+:latestRevision: 2.4.0
 :toc:
 
 == Summary
@@ -54,7 +54,6 @@ This plugin adds an extension *`buildinfo`* to the project.  This extension cont
         <build-java-version>1.7.0_80</build-java-version>
         <java-source-compatibility>1.7.0</java-source-compatibility>
         <java-target-compatibility>1.7.0</java-target-compatibility>
-        <implementation-title>com.project.group:project:3.0.0</implementation-title>
         <implementation-version>3.0.0</implementation-version>
         <build-status>integration</build-status>
         <built-by>isbldas</built-by>
@@ -89,7 +88,6 @@ This plugin adds an extension *`buildinfo`* to the project.  This extension cont
         <e:build-java-version>1.8.0_51</e:build-java-version>
         <e:java-source-compatibility>1.8.0</e:java-source-compatibility>
         <e:java-target-compatibility>1.8.0</e:java-target-compatibility>
-        <e:implementation-title>com.project.group:project:10.0.0</e:implementation-title>
         <e:implementation-version>10.0.0</e:implementation-version>
         <e:build-status>release</e:build-status>
         <e:built-by>isbldas</e:built-by>
@@ -134,7 +132,6 @@ Created-By: 1.7.0_80-b15 (Oracle Corporation)
 Build-Java-Version: 1.7.0_80
 X-Compile-Source-JDK: 1.7
 X-Compile-Target-JDK: 1.7
-Implementation-Title: com.project.group:project:10.0.0
 Implementation-Version: 10.0.0
 Build-Status: integration
 Built-By: gitlab-runner

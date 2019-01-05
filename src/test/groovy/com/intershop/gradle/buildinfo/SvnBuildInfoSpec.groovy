@@ -81,7 +81,7 @@ class SvnBuildInfoSpec extends Specification {
         String origin = provider.SCMOrigin
 
         then:
-        origin == ''
+        origin == 'unknown'
 
         when:
         String branch = provider.branchName
@@ -93,13 +93,13 @@ class SvnBuildInfoSpec extends Specification {
         String rev = provider.SCMRevInfo
 
         then:
-        rev == ''
+        rev == 'unknown'
 
         when:
         String time = provider.lastChangeTime
 
         then:
-        time == '-'
+        time == 'unknown'
 
         when:
         String type = provider.SCMType
