@@ -24,6 +24,7 @@ import com.intershop.gradle.buildinfo.scm.UnknownScmInfoProvider
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.publish.ivy.tasks.GenerateIvyDescriptor
@@ -51,119 +52,137 @@ class BuildInfoPlugin implements Plugin<Project> {
     @PackageScope AbstractCIInfoProvider ciProvider
 
     void apply(Project project) {
-        project.logger.info("Applying ${EXTENSION_NAME} plugin to project: ${project.name}")
+        if(project.getRootProject() != project) {
+            project.logger.warn("${EXTENSION_NAME} will only applied to the root plugin!")
+        } else {
+            project.logger.info("Applying ${EXTENSION_NAME} plugin to project: ${project.name}")
+            this.extension = project.extensions.findByType(BuildInfoExtension) ?: project.extensions.create(EXTENSION_NAME, BuildInfoExtension, project)
 
-        this.extension = project.extensions.findByType(BuildInfoExtension) ?: project.extensions.create(EXTENSION_NAME, BuildInfoExtension, project)
+            if(extension.runOnCI) {
+                initializeProvider(project)
+            }
+            project.afterEvaluate {
+                if (extension.runOnCI) {
+                    if (!extension.noJarInfo) {
+                        addManfiestAttributes(project, project)
+                        project.getSubprojects().each { Project p ->
+                            addManfiestAttributes(project, p)
+                        }
+                    }
 
-        if(extension.runOnCI) {
-            initializeProvider(project)
+                    if (!extension.noDescriptorInfo) {
+                        addIvyDescriptorAttributes(project, project)
+                        addMavenDescriptorAttributes(project, project)
+
+                        project.getSubprojects().each { Project p ->
+                            addIvyDescriptorAttributes(project, p)
+                            addMavenDescriptorAttributes(project, p)
+                        }
+                    }
+                }
+            }
         }
+    }
 
-        project.afterEvaluate {
-            if (extension.runOnCI) {
-                if(! extension.noJarInfo) {
-                    project.tasks.withType(Jar) { Jar jarTask ->
-                        def attributes = [
-                                'Created-By'            : "${infoProvider.javaRuntimeVersion} (${infoProvider.javaVendor})",
-                                'Build-Java-Version'    : infoProvider.javaVersion,
-                                'X-Compile-Source-JDK'  : infoProvider.javaSourceCompatibility ?: infoProvider.javaVersion.split('_')[0],
-                                'X-Compile-Target-JDK'  : infoProvider.javaTargetCompatibility ?: infoProvider.javaVersion.split('_')[0],
+    private void addManfiestAttributes(Project rootProject, Project p) {
+        p.tasks.withType(Jar) { Jar jarTask ->
+            def attributes = [
+                    'Created-By'            : "${infoProvider.javaRuntimeVersion} (${infoProvider.javaVendor})",
+                    'Build-Java-Version'    : infoProvider.javaVersion,
+                    'X-Compile-Source-JDK'  : infoProvider.javaSourceCompatibility ?: infoProvider.javaVersion.split('_')[0],
+                    'X-Compile-Target-JDK'  : infoProvider.javaTargetCompatibility ?: infoProvider.javaVersion.split('_')[0],
 
-                                'Manifest-Version'      : '1.0',
-                                'Implementation-Title'  : "${infoProvider.projectModule ?: 'unknown'}",
-                                'Implementation-Version': "${infoProvider.projectVersion ?: 'unknown'}",
+                    'Manifest-Version'      : '1.0',
+                    'Implementation-Version': "${infoProvider.projectVersion ?: 'unknown'}",
 
-                                'Build-Status'          : "${infoProvider.projectStatus ?: 'unknown'}",
-                                'Built-By'              : "${infoProvider.OSUser ?: 'unknown'}",
-                                'Built-OS'              : "${infoProvider.OSName ?: 'unknown'}",
-                                'Build-Date'            : "${infoProvider.OSTime ?: 'unknown'}",
-                                'Gradle-Version'        : "${infoProvider.gradleVersion ?: 'unknown'}",
-                                'Gradle-RootProject'    : "${infoProvider.rootProject ?: 'unknown'}",
+                    'Build-Status'          : "${infoProvider.projectStatus ?: 'unknown'}",
+                    'Built-By'              : "${infoProvider.OSUser ?: 'unknown'}",
+                    'Built-OS'              : "${infoProvider.OSName ?: 'unknown'}",
+                    'Build-Date'            : "${infoProvider.OSTime ?: 'unknown'}",
+                    'Gradle-Version'        : "${infoProvider.gradleVersion ?: 'unknown'}",
+                    'Gradle-RootProject'    : "${infoProvider.rootProject ?: 'unknown'}",
 
-                                'Module-Origin'         : "${scmProvider.SCMOrigin ?: 'unknown'}",
-                                'SCM-change-info'       : "${scmProvider.SCMRevInfo ?: 'unknown'}",
-                                'SCM-change-time'       : "${scmProvider.lastChangeTime ?: 'unknown'}",
-                                'SCM-branch-name'       : "${scmProvider.branchName ?: 'unknown'}",
-                                'SCM-type'              : "${scmProvider.SCMType ?: 'unknown'}",
+                    'Module-Origin'         : "${scmProvider.SCMOrigin ?: 'unknown'}",
+                    'SCM-change-info'       : "${scmProvider.SCMRevInfo ?: 'unknown'}",
+                    'SCM-change-time'       : "${scmProvider.lastChangeTime ?: 'unknown'}",
+                    'SCM-branch-name'       : "${scmProvider.branchName ?: 'unknown'}",
+                    'SCM-type'              : "${scmProvider.SCMType ?: 'unknown'}",
 
-                                'CI-build-host'         : "${ciProvider.buildHost ?: 'unknown'}",
-                                'CI-build-url'          : "${ciProvider.buildUrl ?: 'unknown'}",
-                                'CI-build-number'       : "${ciProvider.buildNumber ?: 'unknown'}",
-                                'CI-build-job'          : "${ciProvider.buildJob ?: 'unknown'}",
-                                'CI-build-time'         : "${ciProvider.buildTime ?: 'unknown'}"
-                        ]
+                    'CI-build-host'         : "${ciProvider.buildHost ?: 'unknown'}",
+                    'CI-build-url'          : "${ciProvider.buildUrl ?: 'unknown'}",
+                    'CI-build-number'       : "${ciProvider.buildNumber ?: 'unknown'}",
+                    'CI-build-job'          : "${ciProvider.buildJob ?: 'unknown'}",
+                    'CI-build-time'         : "${ciProvider.buildTime ?: 'unknown'}"
+            ]
 
-                        jarTask.inputs.properties(attributes)
+            jarTask.inputs.properties(attributes)
 
-                        jarTask.doFirst {
-                            project.logger.info("Add buildinfo to manifest")
-                            jarTask.manifest.attributes.putAll(attributes)
-                        }
-                    }
-                }
+            jarTask.doFirst {
+                rootProject.logger.info("Add buildinfo to manifest of {}", p.name)
+                jarTask.manifest.attributes.putAll(attributes)
+            }
+        }
+    }
 
-                if(! extension.noDescriptorInfo) {
-                    project.tasks.withType(GenerateIvyDescriptor) { GenerateIvyDescriptor ivyTask ->
-                        project.logger.info("Add buildinfo to ivy file")
-                        ivyTask.descriptor.withXml {
-                            asNode().@'xmlns:e' = 'http://ant.apache.org/ivy/extra'
-                            checkNode(asNode().info[0], 'e:created-by', "${infoProvider.javaRuntimeVersion} (${infoProvider.javaVendor})")
-                            checkNode(asNode().info[0], 'e:build-java-version', infoProvider.javaVersion)
-                            checkNode(asNode().info[0], 'e:java-source-compatibility', infoProvider.javaSourceCompatibility ?: infoProvider.javaVersion.split('_')[0])
-                            checkNode(asNode().info[0], 'e:java-target-compatibility', infoProvider.javaTargetCompatibility ?: infoProvider.javaVersion.split('_')[0])
-                            checkNode(asNode().info[0], 'e:implementation-title', infoProvider.projectModule)
-                            checkNode(asNode().info[0], 'e:implementation-version', infoProvider.projectVersion)
-                            checkNode(asNode().info[0], 'e:build-status', infoProvider.projectStatus)
-                            checkNode(asNode().info[0], 'e:built-by', infoProvider.OSUser)
-                            checkNode(asNode().info[0], 'e:built-os', infoProvider.OSName)
-                            checkNode(asNode().info[0], 'e:build-date', infoProvider.OSTime)
-                            checkNode(asNode().info[0], 'e:gradle-version', infoProvider.gradleVersion)
-                            checkNode(asNode().info[0], 'e:gradle-rootproject', infoProvider.rootProject)
-                            checkNode(asNode().info[0], 'e:module-origin', scmProvider.SCMOrigin)
-                            checkNode(asNode().info[0], 'e:scm-change-info', scmProvider.SCMRevInfo)
-                            checkNode(asNode().info[0], 'e:scm-change-time', scmProvider.lastChangeTime)
-                            checkNode(asNode().info[0], 'e:scm-branch-name', scmProvider.branchName)
-                            checkNode(asNode().info[0], 'e:scm-type', scmProvider.SCMType)
-                            checkNode(asNode().info[0], 'e:ci-build-host', ciProvider.buildHost)
-                            checkNode(asNode().info[0], 'e:ci-build-url', ciProvider.buildUrl)
-                            checkNode(asNode().info[0], 'e:ci-build-number', ciProvider.buildNumber)
-                            checkNode(asNode().info[0], 'e:ci-build-job', ciProvider.buildJob)
-                            checkNode(asNode().info[0], 'e:ci-build-time', ciProvider.buildTime)
-                        }
-                    }
+    private void addIvyDescriptorAttributes(Project rootProject, Project p) {
+        p.tasks.withType(GenerateIvyDescriptor) { GenerateIvyDescriptor ivyTask ->
+            rootProject.logger.info("Add buildinfo to ivy file of {}", p.name)
+            ivyTask.descriptor.withXml {
+                asNode().@'xmlns:e' = 'http://ant.apache.org/ivy/extra'
+                checkNode(asNode().info[0], 'e:created-by', "${infoProvider.javaRuntimeVersion} (${infoProvider.javaVendor})")
+                checkNode(asNode().info[0], 'e:build-java-version', infoProvider.javaVersion)
+                checkNode(asNode().info[0], 'e:java-source-compatibility', infoProvider.javaSourceCompatibility ?: infoProvider.javaVersion.split('_')[0])
+                checkNode(asNode().info[0], 'e:java-target-compatibility', infoProvider.javaTargetCompatibility ?: infoProvider.javaVersion.split('_')[0])
+                checkNode(asNode().info[0], 'e:implementation-version', infoProvider.projectVersion)
+                checkNode(asNode().info[0], 'e:build-status', infoProvider.projectStatus)
+                checkNode(asNode().info[0], 'e:built-by', infoProvider.OSUser)
+                checkNode(asNode().info[0], 'e:built-os', infoProvider.OSName)
+                checkNode(asNode().info[0], 'e:build-date', infoProvider.OSTime)
+                checkNode(asNode().info[0], 'e:gradle-version', infoProvider.gradleVersion)
+                checkNode(asNode().info[0], 'e:gradle-rootproject', infoProvider.rootProject)
+                checkNode(asNode().info[0], 'e:module-origin', scmProvider.SCMOrigin)
+                checkNode(asNode().info[0], 'e:scm-change-info', scmProvider.SCMRevInfo)
+                checkNode(asNode().info[0], 'e:scm-change-time', scmProvider.lastChangeTime)
+                checkNode(asNode().info[0], 'e:scm-branch-name', scmProvider.branchName)
+                checkNode(asNode().info[0], 'e:scm-type', scmProvider.SCMType)
+                checkNode(asNode().info[0], 'e:ci-build-host', ciProvider.buildHost)
+                checkNode(asNode().info[0], 'e:ci-build-url', ciProvider.buildUrl)
+                checkNode(asNode().info[0], 'e:ci-build-number', ciProvider.buildNumber)
+                checkNode(asNode().info[0], 'e:ci-build-job', ciProvider.buildJob)
+                checkNode(asNode().info[0], 'e:ci-build-time', ciProvider.buildTime)
+            }
+        }
+    }
 
-                    project.tasks.withType(GenerateMavenPom) { GenerateMavenPom pomGen ->
-                        project.logger.info("Add buildinfo to pom file")
-                        pomGen.pom.withXml {
-                            NodeList nl = asNode().getByName('properties')
-                            nl.each { Node n -> asNode().remove(n) }
+    private void addMavenDescriptorAttributes(Project rootProject, Project p) {
+        p.tasks.withType(GenerateMavenPom) { GenerateMavenPom pomGen ->
+            rootProject.logger.info("Add buildinfo to pom file of {}", p.name)
+            pomGen.pom.withXml {
+                NodeList nl = asNode().getByName('properties')
+                nl.each { Node n -> asNode().remove(n) }
 
-                            Node propsNode = asNode().appendNode('properties')
-                            propsNode.appendNode('created-by', "${infoProvider.javaRuntimeVersion} (${infoProvider.javaVendor})")
-                            propsNode.appendNode("build-java-version", infoProvider.javaVersion)
-                            propsNode.appendNode('java-source-compatibility', infoProvider.javaSourceCompatibility ?: infoProvider.javaVersion.split('_')[0])
-                            propsNode.appendNode('java-target-compatibility', infoProvider.javaTargetCompatibility ?: infoProvider.javaVersion.split('_')[0])
-                            propsNode.appendNode('implementation-title', infoProvider.projectModule)
-                            propsNode.appendNode('implementation-version', infoProvider.projectVersion)
-                            propsNode.appendNode('build-status', infoProvider.projectStatus)
-                            propsNode.appendNode('built-by', infoProvider.OSUser)
-                            propsNode.appendNode('built-os', infoProvider.OSName)
-                            propsNode.appendNode('build-date', infoProvider.OSTime)
-                            propsNode.appendNode('gradle-version', infoProvider.gradleVersion)
-                            propsNode.appendNode('gradle-rootproject', infoProvider.rootProject)
-                            propsNode.appendNode('module-origin', scmProvider.SCMOrigin)
-                            propsNode.appendNode('scm-change-info', scmProvider.SCMRevInfo)
-                            propsNode.appendNode('scm-change-time', scmProvider.lastChangeTime)
-                            propsNode.appendNode('scm-branch-name', scmProvider.branchName)
-                            propsNode.appendNode('scm-type', scmProvider.SCMType)
-                            propsNode.appendNode('ci-build-host', ciProvider.buildHost)
-                            propsNode.appendNode('ci-build-url', ciProvider.buildUrl)
-                            propsNode.appendNode('ci-build-number', ciProvider.buildNumber)
-                            propsNode.appendNode('ci-build-job', ciProvider.buildJob)
-                            propsNode.appendNode('ci-build-time', ciProvider.buildTime)
-                        }
-                    }
-                }
+                Node propsNode = asNode().appendNode('properties')
+                propsNode.appendNode('created-by', "${infoProvider.javaRuntimeVersion} (${infoProvider.javaVendor})")
+                propsNode.appendNode("build-java-version", infoProvider.javaVersion)
+                propsNode.appendNode('java-source-compatibility', infoProvider.javaSourceCompatibility ?: infoProvider.javaVersion.split('_')[0])
+                propsNode.appendNode('java-target-compatibility', infoProvider.javaTargetCompatibility ?: infoProvider.javaVersion.split('_')[0])
+                propsNode.appendNode('implementation-version', infoProvider.projectVersion)
+                propsNode.appendNode('build-status', infoProvider.projectStatus)
+                propsNode.appendNode('built-by', infoProvider.OSUser)
+                propsNode.appendNode('built-os', infoProvider.OSName)
+                propsNode.appendNode('build-date', infoProvider.OSTime)
+                propsNode.appendNode('gradle-version', infoProvider.gradleVersion)
+                propsNode.appendNode('gradle-rootproject', infoProvider.rootProject)
+                propsNode.appendNode('module-origin', scmProvider.SCMOrigin)
+                propsNode.appendNode('scm-change-info', scmProvider.SCMRevInfo)
+                propsNode.appendNode('scm-change-time', scmProvider.lastChangeTime)
+                propsNode.appendNode('scm-branch-name', scmProvider.branchName)
+                propsNode.appendNode('scm-type', scmProvider.SCMType)
+                propsNode.appendNode('ci-build-host', ciProvider.buildHost)
+                propsNode.appendNode('ci-build-url', ciProvider.buildUrl)
+                propsNode.appendNode('ci-build-number', ciProvider.buildNumber)
+                propsNode.appendNode('ci-build-job', ciProvider.buildJob)
+                propsNode.appendNode('ci-build-time', ciProvider.buildTime)
             }
         }
     }
