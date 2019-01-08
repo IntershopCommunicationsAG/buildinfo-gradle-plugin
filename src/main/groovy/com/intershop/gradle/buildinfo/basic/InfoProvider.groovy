@@ -84,14 +84,6 @@ class InfoProvider {
      * Returns the project module.
      * @return project module name
      */
-    String getProjectModule() {
-        return "${project.group}:${project.name}:${project.version}"
-    }
-
-    /**
-     * Returns the project module.
-     * @return project module name
-     */
     String getRootProject() {
         return project.rootProject.name
     }
