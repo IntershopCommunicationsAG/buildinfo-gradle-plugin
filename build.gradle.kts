@@ -80,6 +80,13 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+sourceSets.main {
+    java.setSrcDirs(emptyList())
+    withConvention(GroovySourceSet::class) {
+        groovy.setSrcDirs(mutableListOf("src/main/groovy", "src/main/java"))
+    }
+}
+
 // set correct project status
 if (project.version.toString().endsWith("-SNAPSHOT")) {
     status = "snapshot'"
@@ -94,32 +101,32 @@ tasks {
         systemProperty("intershop.gradle.versions", "5.2")
         systemProperty("org.gradle.native.dir", ".gradle")
 
-        if(System.getenv("SVNUSER").isNotBlank() &&
-                System.getenv("SVNPASSWD").isNotBlank() &&
-                System.getenv("SVNURL").isNotBlank()) {
+        if(! System.getenv("SVNUSER").isNullOrBlank() &&
+                ! System.getenv("SVNPASSWD").isNullOrBlank() &&
+                ! System.getenv("SVNURL").isNullOrBlank()) {
             systemProperty("svnurl", System.getenv("SVNURL"))
             systemProperty("svnuser", System.getenv("SVNUSER"))
             systemProperty("svnpasswd", System.getenv("SVNPASSWD"))
         }
-        if(System.getenv("GITUSER").isNotBlank() &&
-                System.getenv("GITPASSWD").isNotBlank() &&
-                System.getenv("GITURL").isNotBlank()) {
+        if(! System.getenv("GITUSER").isNullOrBlank() &&
+                ! System.getenv("GITPASSWD").isNullOrBlank() &&
+                ! System.getenv("GITURL").isNullOrBlank()) {
             systemProperty("giturl", System.getenv("GITURL"))
             systemProperty("gituser", System.getenv("GITUSER"))
             systemProperty("gitpasswd", System.getenv("GITPASSWD"))
         }
 
-        if(System.getProperty("SVNUSER").isNotBlank() &&
-                System.getProperty("SVNPASSWD").isNotBlank() &&
-                System.getProperty("SVNURL").isNotBlank()) {
+        if(! System.getProperty("SVNUSER").isNullOrBlank() &&
+                ! System.getProperty("SVNPASSWD").isNullOrBlank() &&
+                ! System.getProperty("SVNURL").isNullOrBlank()) {
             systemProperty("svnurl", System.getProperty("SVNURL"))
             systemProperty("svnuser", System.getProperty("SVNUSER"))
             systemProperty("svnpasswd", System.getProperty("SVNPASSWD"))
         }
 
-        if(System.getProperty("GITUSER").isNotBlank() &&
-                System.getProperty("GITPASSWD").isNotBlank() &&
-                System.getProperty("GITURL").isNotBlank()) {
+        if(! System.getProperty("GITUSER").isNullOrBlank() &&
+                ! System.getProperty("GITPASSWD").isNullOrBlank() &&
+                ! System.getProperty("GITURL").isNullOrBlank()) {
             systemProperty("giturl", System.getProperty("GITURL"))
             systemProperty("gituser", System.getProperty("GITUSER"))
             systemProperty("gitpasswd", System.getProperty("GITPASSWD"))

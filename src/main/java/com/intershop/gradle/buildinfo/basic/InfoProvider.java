@@ -13,126 +13,128 @@
  * See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.intershop.gradle.buildinfo.basic
+package com.intershop.gradle.buildinfo.basic;
 
-import groovy.transform.CompileStatic
-import org.gradle.api.Project
-import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.Project;
+import org.gradle.api.plugins.JavaPluginConvention;
+
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+
 /**
  * This info provider provides the basic information of the project.
  */
-@CompileStatic
-class InfoProvider {
+public class InfoProvider {
 
     /*
      * Project of the current working copy
      */
-    private final Project project
+    private final Project project;
 
     /**
      * Constructs the basic info provider.
      *
      * @param project project of the working copy
      */
-    InfoProvider(Project project) {
-        this.project = project
+    public InfoProvider(Project project) {
+        this.project = project;
     }
 
     /**
      * Returns the project java.runtime.version (read only)
      * @return java.runtime.version
      */
-    static String getJavaRuntimeVersion() {
-        return System.getProperty('java.runtime.version')
+    public static String getJavaRuntimeVersion() {
+        return System.getProperty("java.runtime.version");
     }
 
     /**
      * Returns the project java.version (read only)
      * @return java.version
      */
-    static String getJavaVersion() {
-        return System.getProperty('java.version')
+    public static String getJavaVersion() {
+        return System.getProperty("java.version");
     }
 
     /**
      * Returns the project java VM vendor (read only)
      * @return java.vm.specification.vendor
      */
-    static String getJavaVendor() {
-        System.getProperty('java.vm.specification.vendor')
+    public static String getJavaVendor() {
+        return System.getProperty("java.vm.specification.vendor");
     }
 
     /**
      * Returns the project target compatibility (read only)
      * @return java target compatibility
      */
-    String getJavaTargetCompatibility() {
-        JavaPluginConvention javaConvention = project.convention.findPlugin(JavaPluginConvention)
-        return javaConvention ? javaConvention.targetCompatibility : ''
+    public String getJavaTargetCompatibility() {
+        JavaPluginConvention javaConvention = project.getConvention().findPlugin(JavaPluginConvention.class);
+        return javaConvention != null ? javaConvention.getTargetCompatibility().toString() : "";
     }
 
     /**
      * Returns the project source compatibility (read only)
      * @return java source compatibility
      */
-    String getJavaSourceCompatibility() {
-        JavaPluginConvention javaConvention = project.convention.findPlugin(JavaPluginConvention)
-        return javaConvention ? javaConvention.sourceCompatibility : ''
+    public String getJavaSourceCompatibility() {
+        JavaPluginConvention javaConvention = project.getConvention().findPlugin(JavaPluginConvention.class);
+        return javaConvention != null ? javaConvention.getSourceCompatibility().toString() : "";
     }
 
     /**
      * Returns the project module.
      * @return project module name
      */
-    String getRootProject() {
-        return project.rootProject.name
+    public String getRootProject() {
+        return project.getRootProject().getName();
     }
 
     /**
      * Returns the project version.
      * @return version of the project
      */
-    String getProjectVersion() {
-        return project.getVersion()
+    public String getProjectVersion() {
+        return project.getVersion().toString();
     }
 
     /**
      * Returns the project status
      * @return status of the project
      */
-    String getProjectStatus() {
-        return project.status
+    public String getProjectStatus() {
+        return project.getStatus().toString();
     }
 
     /**
      * Returns the username of the build user
      * @return username
      */
-    static String getOSUser() {
-        return System.getProperty('user.name')
+    public static String getOSUser() {
+        return System.getProperty("user.name");
     }
 
     /**
      * Returns the OS name.
      * @return OS name
      */
-    static String getOSName() {
-        System.getProperty('os.name')
+    public static String getOSName() {
+        return System.getProperty("os.name");
     }
 
     /**
      * The build time on the build machine.
      * @return time string
      */
-    static String getOSTime() {
-       new Date().format('yyyy-MM-dd_HH:mm:ss')
+    public static String getOSTime() {
+        return ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss"));
     }
 
     /**
      * The used Gradle version.
      * @return version of Gradle
      */
-    String getGradleVersion() {
-        project.gradle.gradleVersion
+    public String getGradleVersion() {
+        return project.getGradle().getGradleVersion();
     }
 }

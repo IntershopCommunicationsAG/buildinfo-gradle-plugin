@@ -2,7 +2,7 @@
 :latestRevision: 4.0.0
 :toc:
 
-NOTE: Version 3 of this plugin will only work with Gradle 4 and JDK 8.
+NOTE: Version 4 of this plugin will only work with Gradle 5 and JDK 8.
 
 == Summary
 This plugin adds information about the build, OS, CI process and SCM to the publish meta file (pom.xml or ivy.xml) and

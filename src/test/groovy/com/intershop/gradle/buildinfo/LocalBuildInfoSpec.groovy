@@ -15,7 +15,7 @@
  */
 package com.intershop.gradle.buildinfo
 
-import com.intershop.gradle.test.AbstractIntegrationSpec
+import com.intershop.gradle.test.AbstractIntegrationGroovySpec
 import groovy.util.logging.Slf4j
 import spock.lang.Unroll
 
@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue
 
 @Unroll
 @Slf4j
-class LocalBuildInfoSpec extends AbstractIntegrationSpec {
+class LocalBuildInfoSpec extends AbstractIntegrationGroovySpec {
 
     def 'Add BuildInfo To Jar (Gradle #gradleVersion)'(gradleVersion) {
         given:
@@ -501,7 +501,7 @@ class LocalBuildInfoSpec extends AbstractIntegrationSpec {
     }
 
     private File createSubProjectJava(String projectPath, File settingsGradle, String packageName, String buildContent, String version){
-        File subProject = createSubProject(projectPath, settingsGradle, buildContent)
+        File subProject = createSubProject(projectPath, buildContent)
         writeJavaTestClass(packageName, subProject)
         return subProject
     }
