@@ -13,22 +13,26 @@
  * See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.intershop.gradle.buildinfo.scm
+package com.intershop.gradle.buildinfo.scm;
 
-import groovy.transform.CompileStatic
+import java.io.File;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * This info provider provides the information of the used file system repository.
  */
-@CompileStatic
-class UnknownScmInfoProvider extends AbstractScmInfoProvider {
+public class UnknownScmInfoProvider extends AbstractScmInfoProvider {
 
     /**
      * Constructs the local information provider
      * @param projectDir
      */
-    def UnknownScmInfoProvider(File projectDir) {
-        super(projectDir)
+    public UnknownScmInfoProvider(File projectDir) {
+        super(projectDir);
     }
 
     /**
@@ -38,19 +42,19 @@ class UnknownScmInfoProvider extends AbstractScmInfoProvider {
      * @return remote url
      */
     @Override
-    String getSCMOrigin() {
-        return projectDir.absoluteFile.toURI().toString()
+    public String getSCMOrigin() {
+        return projectDir.getAbsoluteFile().toURI().toString();
     }
 
     /**
      * Returns branch name of the working copy (read only)
-     * It returns for this implementation always 'localFileSystem'.
+     * It returns for this implementation always "localFileSystem".
      *
      * @return branch name
      */
     @Override
-    String getBranchName() {
-        return 'localFileSystem'
+    public String getBranchName() {
+        return "localFileSystem";
     }
 
     /**
@@ -59,8 +63,8 @@ class UnknownScmInfoProvider extends AbstractScmInfoProvider {
      * @return revision
      */
     @Override
-    String getSCMRevInfo() {
-        return Long.toString(projectDir.lastModified())
+    public String getSCMRevInfo() {
+        return Long.toString(projectDir.lastModified());
     }
 
     /**
@@ -69,16 +73,20 @@ class UnknownScmInfoProvider extends AbstractScmInfoProvider {
      * @return revision
      */
     @Override
-    String getLastChangeTime() {
-        return (new Date(projectDir.lastModified())).format("yyyyMMddHHmmss")
+    public String getLastChangeTime() {
+        Instant instant = Instant.ofEpochSecond(projectDir.lastModified());
+        Clock clock = Clock.fixed(instant, ZoneOffset.UTC);
+        ZonedDateTime dateTime = ZonedDateTime.now(clock);
+        dateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        return "";
     }
 
     /**
      * Returns SCM type (read only)
-     * @return 'local'
+     * @return "local"
      */
     @Override
-    String getSCMType() {
-        return 'local'
+    public String getSCMType() {
+        return "local";
     }
 }

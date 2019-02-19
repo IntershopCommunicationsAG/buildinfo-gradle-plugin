@@ -23,6 +23,8 @@ import groovy.transform.CompileStatic
 @CompileStatic
 abstract class AbstractScmInfoProvider {
 
+    protected final static String UNKNOWN = 'unknown'
+
     protected final File projectDir
 
     /**
