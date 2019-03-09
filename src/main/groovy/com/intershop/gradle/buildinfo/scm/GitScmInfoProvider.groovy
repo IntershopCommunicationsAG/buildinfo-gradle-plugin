@@ -20,6 +20,13 @@ import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.*
 import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.revwalk.RevWalk
+
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+
 /**
  * This info provider provides the information of the used Git repository.
  */
@@ -130,7 +137,12 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
         if(! getSCMRevInfo().equals('unknown')) {
             RevWalk walk = new RevWalk(gitRepo)
             RevCommit commit = walk.parseCommit(gitRepo.resolve(Constants.HEAD))
-            return new Date( ((long)commit.commitTime)*1000).format("yyyyMMddHHmmss")
+            
+            Instant instant = Instant.ofEpochSecond(commit.commitTime);
+            Clock clock = Clock.fixed(instant, ZoneOffset.UTC);
+            ZonedDateTime dateTime = ZonedDateTime.now(clock);
+
+            return dateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
         } else {
             pChangeTime = UNKNOWN
         }
