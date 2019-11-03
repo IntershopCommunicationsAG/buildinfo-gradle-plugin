@@ -74,7 +74,7 @@ class BuildInfoProjectPlugin implements Plugin<Project> {
                     'Implementation-Vendor': (rootExtension.getModuleVendor() ?: 'unknown')
             ]
 
-            if (rootExtension.runOnCI && rootExtension.additionalJarInfo) {
+            if (rootExtension.additionalJarInfo) {
                 log.info('Buildinfo for manifest will be extended with additional parameters.')
                 attributes.putAll([
                         'Implementation-Version': "${infoProvider.projectVersion ?: 'unknown'}".toString(),
@@ -114,7 +114,7 @@ class BuildInfoProjectPlugin implements Plugin<Project> {
         void configureComponentBuildPublishing(PublishingExtension publishing,
                                                BuildInfoExtension extension) {
 
-            if (extension.runOnCI && !extension.noDescriptorInfo) {
+            if (!extension.noDescriptorInfo) {
                 try {
                     MavenPublication mvnPub = publishing.publications.maybeCreate('mvn', MavenPublication.class)
                     if(mvnPub != null && mvnPub.pom != null) {
@@ -196,129 +196,6 @@ class BuildInfoProjectPlugin implements Plugin<Project> {
                     log.debug('Maven publishing was not applied to the project')
                 }
 
-                try {
-                    IvyPublication ivyPub = publishing.publications.maybeCreate('ivy', IvyPublication.class)
-
-                    if(ivyPub != null && ivyPub.descriptor != null) {
-                        ivyPub.descriptor.withXml(new Action<XmlProvider>() {
-                            @Override
-                            void execute(XmlProvider xmlProvider) {
-                                log.info('Add buildinfo to ivy file')
-
-                                InfoProvider infoProvider = extension.infoProvider
-                                AbstractScmInfoProvider scmProvider = extension.scmProvider
-                                AbstractCIInfoProvider ciProvider = extension.ciProvider
-
-                                xmlProvider.asElement().setAttribute('xmlns:e', 'http://ant.apache.org/ivy/extra')
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:created-by',
-                                        "${infoProvider.javaRuntimeVersion} (${infoProvider.javaVendor})")
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:build-java-version',
-                                        infoProvider.javaVersion)
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:java-source-compatibility',
-                                        infoProvider.javaSourceCompatibility ?: infoProvider.javaVersion.split('_')[0])
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:java-target-compatibility',
-                                        infoProvider.javaTargetCompatibility ?: infoProvider.javaVersion.split('_')[0])
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:implementation-vendor',
-                                        (extension.getModuleVendor() ?: 'unknonw'))
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:implementation-version',
-                                        infoProvider.projectVersion.toString())
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:build-status',
-                                        infoProvider.projectStatus)
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:built-by',
-                                        infoProvider.OSUser)
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:built-os',
-                                        infoProvider.OSName)
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:build-date',
-                                        infoProvider.OSTime)
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:gradle-version',
-                                        infoProvider.gradleVersion)
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:gradle-rootproject',
-                                        infoProvider.rootProject)
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:module-origin',
-                                        scmProvider.SCMOrigin)
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:scm-change-info',
-                                        scmProvider.SCMRevInfo)
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:scm-change-time',
-                                        scmProvider.lastChangeTime)
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:scm-branch-name',
-                                        scmProvider.branchName)
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:scm-type',
-                                        scmProvider.SCMType)
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:ci-build-host',
-                                        ciProvider.buildHost)
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:ci-build-url',
-                                        ciProvider.buildUrl)
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:ci-build-number',
-                                        ciProvider.buildNumber)
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:ci-build-job',
-                                        ciProvider.buildJob)
-
-                                checkNode(xmlProvider.asElement().getElementsByTagName('info')?.item(0),
-                                        'e:ci-build-time',
-                                        ciProvider.buildTime)
-                            }
-
-                            private void checkNode(org.w3c.dom.Node node, String name, String value) {
-                                Element infoElement = ((Element) node)
-                                org.w3c.dom.NodeList nl = infoElement.getElementsByTagName(name)
-                                nl.each { org.w3c.dom.Node n ->
-                                    infoElement.removeChild(n)
-                                }
-                                Document document = node.getOwnerDocument()
-
-                                Element nelement = document.createElement(name)
-                                nelement.appendChild(document.createTextNode(value))
-                                infoElement.appendChild(nelement)
-                            }
-                        })
-                    } else {
-                        log.debug('Ivy publishing plugin is applied, but not configured.')
-                    }
-                } catch(InvalidUserDataException ex ) {
-                    log.debug('Ivy publishing was not applied to the project')
-                }
             }
         }
     }

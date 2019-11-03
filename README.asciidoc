@@ -1,11 +1,11 @@
 = Buildinfo Plugin
-:latestRevision: 4.0.0
+:latestRevision: 5.0.0
 :toc:
 
-NOTE: Version 4 of this plugin will only work with Gradle 5 and JDK 8.
+NOTE: Version 5 of this plugin will only work with Gradle 5, JDK 8 and does not support Ivy or Subversion.
 
 == Summary
-This plugin adds information about the build, OS, CI process and SCM to the publish meta file (pom.xml or ivy.xml) and
+This plugin adds information about the build, OS, CI process and SCM to the publish meta file (pom.xml) and
 to the jar file. This helps to verify build artifacts.
 
 == Usage
@@ -20,8 +20,6 @@ plugins {
 }
 ----
 
-This plugin will be activated if a system or environment variable `RUNONCI` or the project property `runOnCI` is specified.
-
 == Project Extension 'buildinfo'
 This plugin adds an extension *`buildinfo`* to the project.  This extension contains all plugin configurations.
 
@@ -29,8 +27,6 @@ This plugin adds an extension *`buildinfo`* to the project.  This extension cont
 [cols="10%,10%,10%,80%", width="90%, options="header"]
 |===
 |Property           | Type      | Default value | Description
-|*runOnCI*          |`boolean`  | false         | This configuration must be true, if the project is used on a CI server. +
-                                                  _This can be overwritten by the system or environment variable `RUNONCI` or project property `runOnCI`._
 |*noAdditionalJarInfo*        |`boolean`  | false         | If this value is true the build information is not stored in the jar file.  +
                                                   _This can be overwritten by the system or environment variable `NOJARINFO` or project property `noJarInfo`._
 |*noDescriptorInfo* |`boolean`  | false         | If this value is true the build information is not stored in a descriptor file (ivy/pom).  +
@@ -79,53 +75,6 @@ This plugin adds an extension *`buildinfo`* to the project.  This extension cont
 </project>
 ----
 
-=== Ivy ivy.xml
-[source,xml]
-[subs=+attributes]
-.ivy.xml
-----
-<ivy-module xmlns:e="http://ant.apache.org/ivy/extra" version="2.0">
-    <info organisation="com.project.group" module="project" revision="10.0.0" status="integration" publication="20160222151721">
-        <e:displayName>Project display name</e:displayName>
-        <!-- properties added by buildinfo gradle plugin - start --/>
-        <e:created-by>1.8.0_51-b16 (Oracle Corporation)</e:created-by>
-        <e:build-java-version>1.8.0_51</e:build-java-version>
-        <e:java-source-compatibility>1.8.0</e:java-source-compatibility>
-        <e:java-target-compatibility>1.8.0</e:java-target-compatibility>
-        <e:implementation-version>10.0.0</e:implementation-version>
-        <e:build-status>release</e:build-status>
-        <e:built-by>isbldas</e:built-by>
-        <e:built-os>Linux</e:built-os>
-        <e:build-date>2016-02-22_15:17:21</e:build-date>
-        <e:gradle-version>2.7</e:gradle-version>
-        <e:gradle-rootproject>project</e:gradle-rootproject>
-        <e:module-origin>https://scm.server/projectroot/branches/SB_10/scmsubproject</e:module-origin>
-        <e:scm-change-info>217925</e:scm-change-info>
-        <e:scm-change-time>-</e:scm-change-time>
-        <e:scm-branch-name>branches/SB_10.0</e:scm-branch-name>
-        <e:scm-type>svn</e:scm-type>
-        <e:ci-build-host>buildserver.com</e:ci-build-host>
-        <e:ci-build-url>https://buildserver.com/buildjob</e:ci-build-url>
-        <e:ci-build-number>15</e:ci-build-number>
-        <e:ci-build-job>buildjob</e:ci-build-job>
-        <e:ci-build-time>2016-02-22T15:09:15.508+01:00</e:ci-build-time>
-        <!-- properties added by buildinfo gradle plugin - end --/>
-    </info>
-    <configurations>
-        <conf name="default" visibility="public" extends="runtime"/>
-        <conf name="runtime" visibility="public"/>
-    </configurations>
-    <publications>
-        <artifact name="project" type="share" ext="zip" conf="runtime"/>
-        <artifact name="project" type="jar" ext="jar" conf="runtime"/>
-        <artifact xmlns:m="http://ant.apache.org/ivy/maven" name="project" type="javadoc" ext="jar" conf="runtime" m:classifier="javadoc"/>
-        <artifact name="project" type="cartridge" ext="zip" conf="runtime"/>
-    </publications>
-    <dependencies>
-    </dependencies>
-</ivy-module>
-----
-
 === Jar File
 [source,properties]
 [subs=+attributes]
@@ -157,15 +106,6 @@ CI-build-time: 2016-02-22T15:09:15.508+01:00
 
 === Test
 The integration tests using a test repositories. Therefore it is necessary to specify project properties for the test execution.
-
-.Table Subversion test configuration
-|===
-|Test Property |Description | Value
-
-|*svnurl*    | Root URL of the test project        | Must be specified with environment variable *`SVNURL`*
-|*svnuser*   | User name of Subversion test user   | Must be specified with environment variable *`SVNUSER`*
-|*svnpasswd* | Password for Subversion test user   | Must be specified with environment variable *`SVNPASSWD`*
-|===
 
 .Table Git test configuration
 |===

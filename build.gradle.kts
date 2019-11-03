@@ -1,6 +1,5 @@
 import com.jfrog.bintray.gradle.BintrayExtension
-import org.asciidoctor.gradle.AsciidoctorExtension
-import org.asciidoctor.gradle.AsciidoctorTask
+import org.asciidoctor.gradle.jvm.AsciidoctorTask
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import java.util.Date
@@ -21,6 +20,9 @@ import java.util.Date
  * limitations under the License.
  */
 plugins {
+    // build performance
+    id("com.gradle.build-scan") version "3.0"
+
     // project plugins
     `java-gradle-plugin`
     groovy
@@ -35,10 +37,10 @@ plugins {
     `maven-publish`
 
     // intershop version plugin
-    id("com.intershop.gradle.scmversion") version "4.1.0"
+    id("com.intershop.gradle.scmversion") version "6.0.0"
 
     // plugin for documentation
-    id("org.asciidoctor.convert") version "1.5.10"
+    id("org.asciidoctor.jvm.convert") version "2.3.0"
 
     // plugin for publishing to Gradle Portal
     id("com.gradle.plugin-publish") version "0.10.1"
@@ -49,6 +51,11 @@ plugins {
 
 scm {
     version.initialVersion = "1.0.0"
+}
+
+buildScan {
+    termsOfServiceUrl   = "https://gradle.com/terms-of-service"
+    termsOfServiceAgree = "yes"
 }
 
 // release configuration
@@ -81,7 +88,7 @@ java {
 }
 
 sourceSets.main {
-    java.setSrcDirs(emptyList())
+    java.setSrcDirs(listOf<String>())
     withConvention(GroovySourceSet::class) {
         groovy.setSrcDirs(mutableListOf("src/main/groovy", "src/main/java"))
     }
@@ -92,36 +99,17 @@ if (project.version.toString().endsWith("-SNAPSHOT")) {
     status = "snapshot'"
 }
 
-configure<AsciidoctorExtension> {
-    noDefaultRepositories = true
-}
-
 tasks {
     withType<Test>().configureEach {
-        systemProperty("intershop.gradle.versions", "5.2")
+        systemProperty("intershop.gradle.versions", "5.6.3")
         systemProperty("org.gradle.native.dir", ".gradle")
 
-        if(! System.getenv("SVNUSER").isNullOrBlank() &&
-                ! System.getenv("SVNPASSWD").isNullOrBlank() &&
-                ! System.getenv("SVNURL").isNullOrBlank()) {
-            systemProperty("svnurl", System.getenv("SVNURL"))
-            systemProperty("svnuser", System.getenv("SVNUSER"))
-            systemProperty("svnpasswd", System.getenv("SVNPASSWD"))
-        }
         if(! System.getenv("GITUSER").isNullOrBlank() &&
                 ! System.getenv("GITPASSWD").isNullOrBlank() &&
                 ! System.getenv("GITURL").isNullOrBlank()) {
             systemProperty("giturl", System.getenv("GITURL"))
             systemProperty("gituser", System.getenv("GITUSER"))
             systemProperty("gitpasswd", System.getenv("GITPASSWD"))
-        }
-
-        if(! System.getProperty("SVNUSER").isNullOrBlank() &&
-                ! System.getProperty("SVNPASSWD").isNullOrBlank() &&
-                ! System.getProperty("SVNURL").isNullOrBlank()) {
-            systemProperty("svnurl", System.getProperty("SVNURL"))
-            systemProperty("svnuser", System.getProperty("SVNUSER"))
-            systemProperty("svnpasswd", System.getProperty("SVNPASSWD"))
         }
 
         if(! System.getProperty("GITUSER").isNullOrBlank() &&
@@ -165,12 +153,15 @@ tasks {
     withType<AsciidoctorTask> {
         dependsOn("copyAsciiDoc")
 
-        sourceDir = file("$buildDir/tmp/asciidoctorSrc")
+        setSourceDir(file("$buildDir/tmp/asciidoctorSrc"))
         sources(delegateClosureOf<PatternSet> {
             include("README.asciidoc")
         })
 
-        backends("html5", "docbook")
+        outputOptions {
+            setBackends(listOf("html5", "docbook"))
+        }
+
         options = mapOf( "doctype" to "article",
                 "ruby"    to "erubis")
         attributes = mapOf(
@@ -286,17 +277,8 @@ bintray {
 }
 
 dependencies {
-    //svn
-    // replace svnkit"s JNA 4.x with 3.2.7, which is used by Gradle itself
-    implementation("org.tmatesoft.svnkit:svnkit:1.9.3") {
-        exclude(group = "net.java.dev.jna")
-        exclude(group = "com.trilead", module = "trilead-ssh2")
-    }
-    implementation("com.trilead:trilead-ssh2:1.0.0-build221")
-    runtimeOnly("net.java.dev.jna:jna:4.1.0")
-
     //jgit
-    implementation("org.eclipse.jgit:org.eclipse.jgit:5.0.1.201806211838-r") {
+    implementation("org.eclipse.jgit:org.eclipse.jgit:5.5.1.201910021850-r") {
         exclude(group = "org.apache.httpcomponents", module = "httpclient")
         exclude(group = "org.slf4j", module = "slf4j-api")
     }
