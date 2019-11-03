@@ -63,6 +63,10 @@ group = "com.intershop.gradle.buildinfo"
 description = "Gradle Buildinfo Plugin"
 version = scm.version.version
 
+repositories {
+    jcenter()
+}
+
 val pluginId = "com.intershop.gradle.buildinfo"
 
 gradlePlugin {
@@ -192,7 +196,6 @@ tasks {
     getByName("jar")?.dependsOn("asciidoctor")
 
 
-
     register<Jar>("sourceJar") {
         description = "Creates a JAR that contains the source code."
 
@@ -215,11 +218,11 @@ publishing {
             artifact(tasks.getByName("sourceJar"))
             artifact(tasks.getByName("javaDoc"))
 
-            artifact(File(buildDir, "asciidoc/html5/README.html")) {
+            artifact(File(buildDir, "docs/asciidoc/html5/README.html")) {
                 classifier = "reference"
             }
 
-            artifact(File(buildDir, "asciidoc/docbook/README.xml")) {
+            artifact(File(buildDir, "docs/asciidoc/docbook/README.xml")) {
                 classifier = "docbook"
             }
 
@@ -290,6 +293,3 @@ dependencies {
     testImplementation(gradleTestKit())
 }
 
-repositories {
-    jcenter()
-}
