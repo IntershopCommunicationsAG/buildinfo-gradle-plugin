@@ -18,7 +18,7 @@ package com.intershop.gradle.buildinfo
 import com.intershop.gradle.buildinfo.basic.InfoProvider
 import com.intershop.gradle.buildinfo.ci.*
 import com.intershop.gradle.buildinfo.scm.GitScmInfoProvider
-import com.intershop.gradle.buildinfo.scm.SvnScmInfoProvider
+
 import com.intershop.gradle.buildinfo.scm.UnknownScmInfoProvider
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -46,7 +46,7 @@ class BuildInfoPlugin implements Plugin<Project> {
     void apply(Project project) {
 
         this.extension = project.getRootProject().extensions.findByType(BuildInfoExtension) ?: project.getRootProject().extensions.create(EXTENSION_NAME, BuildInfoExtension, project.getRootProject())
-        initializeProvider(project, extension.runOnCI)
+        initializeProvider(project)
 
         project.rootProject.plugins.apply(BuildInfoProjectPlugin.class)
 
@@ -63,33 +63,29 @@ class BuildInfoPlugin implements Plugin<Project> {
      *
      * @param project
      */
-    private void initializeProvider(Project project, boolean runOnCI) {
-        if (runOnCI) {
+    private void initializeProvider(Project project) {
+
+        if (System.getenv('bamboo_buildResultsUrl')) {
+            extension.ciProvider = new BambooCIInfoProvider(project.projectDir)
+        } else if (System.getenv('JENKINS_URL')) {
+            extension.ciProvider = new JenkinsCIInfoProvider(project.projectDir)
+        } else if (System.getenv('CI_BUILD_ID')) {
+            extension.ciProvider = new GitlabCIInfoProvider(project.projectDir)
+        } else if (System.getenv('TRAVIS')) {
+            extension.ciProvider = new TravisCIInfoProvider(project.projectDir)
+        } else {
+            extension.ciProvider = new UnknownCIInfoProvider(project.projectDir)
+        }
+
+        File gitDir = new File(project.rootDir, '.git')
+
+        if (gitDir.directory) {
+            extension.scmProvider = new GitScmInfoProvider(project.projectDir)
             if (System.getenv('bamboo_buildResultsUrl')) {
-                extension.ciProvider = new BambooCIInfoProvider(project.projectDir)
-            } else if (System.getenv('JENKINS_URL')) {
-                extension.ciProvider = new JenkinsCIInfoProvider(project.projectDir)
-            } else if (System.getenv('CI_BUILD_ID')) {
-                extension.ciProvider = new GitlabCIInfoProvider(project.projectDir)
-            } else if (System.getenv('TRAVIS')) {
-                extension.ciProvider = new TravisCIInfoProvider(project.projectDir)
-            } else {
-                extension.ciProvider = new UnknownCIInfoProvider(project.projectDir)
+                ((GitScmInfoProvider) extension.scmProvider).bambooBuild = true
             }
-
-            File gitDir = new File(project.rootDir, '.git')
-            File svnDir = new File(project.rootDir, '.svn')
-
-            if (gitDir.directory) {
-                extension.scmProvider = new GitScmInfoProvider(project.projectDir)
-                if (System.getenv('bamboo_buildResultsUrl')) {
-                    ((GitScmInfoProvider) extension.scmProvider).bambooBuild = true
-                }
-            } else if (svnDir.directory) {
-                extension.scmProvider = new SvnScmInfoProvider(project.projectDir)
-            } else {
-                extension.scmProvider = new UnknownScmInfoProvider(project.projectDir)
-            }
+        } else {
+            extension.scmProvider = new UnknownScmInfoProvider(project.projectDir)
         }
 
         extension.infoProvider = new InfoProvider(project)

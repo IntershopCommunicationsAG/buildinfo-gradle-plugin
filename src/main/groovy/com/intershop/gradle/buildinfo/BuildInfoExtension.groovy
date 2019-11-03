@@ -29,10 +29,6 @@ import org.gradle.api.Project
 @CompileStatic
 class BuildInfoExtension {
 
-    // run on CI server
-    public final static String RUNONCI_ENV = 'RUNONCI'
-    public final static String RUNONCI_PRJ = 'runOnCI'
-
     public final static String ADDJARINFO_ENV = 'ADDITIONALJARINFO'
     public final static String ADDJARINFO_PRJ = 'additionalJarInfo'
 
@@ -45,11 +41,6 @@ class BuildInfoExtension {
 
         this.project = project
 
-        runOnCI = Boolean.parseBoolean(getVariable(RUNONCI_ENV, RUNONCI_PRJ, 'false'))
-        if(runOnCI) {
-            log.warn('Buildinfo task will be executed on a CI build environment for {}.', project.name)
-        }
-
         additionalJarInfo = Boolean.parseBoolean(getVariable(ADDJARINFO_ENV, ADDJARINFO_PRJ, 'false'))
         if(additionalJarInfo) {
             log.info('Additional information will be attached to jar files of {}.', project.name)
@@ -60,14 +51,6 @@ class BuildInfoExtension {
             log.info('No information will be attached to descriptor files of {}.', project.name)
         }
     }
-
-    /**
-     * <p>Configuration for the execution on the CI server</p>
-     *
-     * <p>Can be configured/overwritten with environment variable RUNONCI;
-     * java environment RUNONCI or project variable runOnCI</p>
-     */
-    boolean runOnCI
 
     /**
      * <p>Configuration for the execution on the CI server without stored infomation in jar files</p>
