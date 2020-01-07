@@ -71,7 +71,7 @@ val pluginId = "com.intershop.gradle.buildinfo"
 
 gradlePlugin {
     plugins {
-        create("jaxbPlugin") {
+        create("buildinfoPlugin") {
             id = pluginId
             implementationClass = "com.intershop.gradle.buildinfo.BuildInfoPlugin"
             displayName = project.name

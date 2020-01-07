@@ -91,71 +91,6 @@ class LocalBuildInfoSpec extends AbstractIntegrationGroovySpec {
         gradleVersion << supportedGradleVersions
     }
 
-    def 'Add BuildInfo To POM (Gradle #gradleVersion)'(gradleVersion) {
-        given:
-        writeJavaTestClass('com.intershop.test')
-
-        new File(testProjectDir, 'settings.gradle') << """
-            rootProject.name= 'test'
-        """.stripIndent()
-
-        buildFile << """
-            plugins {
-                id 'java'
-                id 'com.intershop.gradle.buildinfo'
-                id 'maven-publish'
-            }
-
-            group = 'com.test'
-            version = '1.0.0.0'
-
-            sourceCompatibility = 1.8
-            targetCompatibility = 1.8
-
-            publishing {
-                repositories {
-                    maven {
-                        // change to point to your repo, e.g. http://my.org/repo
-                        url "\${rootProject.buildDir}/repo"
-                    }
-                }
-                publications {
-                    maven(MavenPublication) {
-                        from components.java
-                    }
-                }
-            }
-        """.stripIndent()
-
-        when:
-        def result = getPreparedGradleRunner()
-                .withArguments('publish', '--stacktrace', '-i')
-                .withGradleVersion(gradleVersion)
-                .build()
-
-        then:
-        (new File(testProjectDir, 'build/repo/com/test/test/1.0.0.0/test-1.0.0.0.pom')).exists()
-        (new File(testProjectDir, 'build/tmp/jar/MANIFEST.MF')).exists()
-
-        String pomFileContents = new File(testProjectDir, 'build/repo/com/test/test/1.0.0.0/test-1.0.0.0.pom').text
-        1 == pomFileContents.count('<scm-type>local</scm-type>')
-
-        when:
-        def secResult = getPreparedGradleRunner()
-                .withArguments('publish', '--stacktrace', '-i')
-                .withGradleVersion(gradleVersion)
-                .build()
-
-        then:
-        (new File(testProjectDir, 'build/repo/com/test/test/1.0.0.0/test-1.0.0.0.pom')).exists()
-
-        String secPomFileContents = new File(testProjectDir, 'build/repo/com/test/test/1.0.0.0/test-1.0.0.0.pom').text
-        1 == secPomFileContents.count('<scm-type>local</scm-type>')
-
-        where:
-        gradleVersion << supportedGradleVersions
-    }
-
     def 'Add BuildInfo to Jars in multi projects (Gradle #gradleVersion)'(gradleVersion) {
 
         String prja = """
@@ -237,20 +172,7 @@ class LocalBuildInfoSpec extends AbstractIntegrationGroovySpec {
                 .build()
 
         then:
-        result.output.contains('Add buildinfo to pom file')
         result.output.contains('Add buildinfo to manifest')
-
-        (new File(testProjectDir, 'build/repo/com/test/root/multiprojecttest/1.0.0/multiprojecttest-1.0.0.pom')).exists()
-        (new File(testProjectDir, 'build/repo/com/intershop/testproject/project1a/1.0.0/project1a-1.0.0.pom')).exists()
-        (new File(testProjectDir, 'build/repo/com/intershop/testproject/project2b/1.0.0/project2b-1.0.0.pom')).exists()
-
-        String ivyFileContentsRoot = new File(testProjectDir,  'build/repo/com/test/root/multiprojecttest/1.0.0/multiprojecttest-1.0.0.pom').text
-        String ivyFileContentsA = new File(testProjectDir,  'build/repo/com/intershop/testproject/project1a/1.0.0/project1a-1.0.0.pom').text
-        String ivyFileContentsB = new File(testProjectDir,  'build/repo/com/intershop/testproject/project2b/1.0.0/project2b-1.0.0.pom').text
-
-        1 == ivyFileContentsRoot.count('<scm-type>local</scm-type>')
-        1 == ivyFileContentsA.count('<scm-type>local</scm-type>')
-        1 == ivyFileContentsB.count('<scm-type>local</scm-type>')
 
         where:
         gradleVersion << supportedGradleVersions
