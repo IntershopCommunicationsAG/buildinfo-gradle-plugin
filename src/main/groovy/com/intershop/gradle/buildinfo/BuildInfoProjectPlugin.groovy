@@ -29,13 +29,7 @@ import javax.inject.Inject
 @CompileStatic
 class BuildInfoProjectPlugin implements Plugin<Project> {
 
-    private final ModelRegistry modelRegistry
     private BuildInfoExtension rootExtension
-
-    @Inject
-    BuildInfoProjectPlugin(ModelRegistry modelRegistry) {
-        this.modelRegistry = modelRegistry
-    }
 
     void apply(Project project) {
         rootExtension = project.getRootProject().extensions.findByType(BuildInfoExtension.class)
@@ -45,12 +39,6 @@ class BuildInfoProjectPlugin implements Plugin<Project> {
 
             project.afterEvaluate {
                 project.tasks.withType(Jar.class, new ManifestActionJar())
-            }
-
-            if(modelRegistry != null && modelRegistry.state(ModelPath.nonNullValidatedPath('buildInfoData')) == null) {
-                modelRegistry.register(ModelRegistrations.bridgedInstance(
-                        ModelReference.of('buildInfoData', BuildInfoExtension.class), rootExtension)
-                        .descriptor( 'Build info data').build())
             }
         } else {
             project.logger.info("Rootproject plugin is missing!")
