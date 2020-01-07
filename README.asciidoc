@@ -1,5 +1,5 @@
 = Buildinfo Plugin
-:latestRevision: 5.0.0
+:latestRevision: 6.0.0
 :toc:
 
 NOTE: Version 5 of this plugin will only work with Gradle 5, JDK 8 and does not support Ivy or Subversion.
@@ -29,51 +29,11 @@ This plugin adds an extension *`buildinfo`* to the project.  This extension cont
 |Property           | Type      | Default value | Description
 |*noAdditionalJarInfo*        |`boolean`  | false         | If this value is true the build information is not stored in the jar file.  +
                                                   _This can be overwritten by the system or environment variable `NOJARINFO` or project property `noJarInfo`._
-|*noDescriptorInfo* |`boolean`  | false         | If this value is true the build information is not stored in a descriptor file (ivy/pom).  +
-                                                  _This can be overwritten by the system or environment variable `noDescriptorInfo` or project property `noDescriptorInfo`._
 |*ModuleVendor*  |`String`   | ''            | The name of the vendor. +
                                                   This information is always added to the JAR if it is configured.
 |===
 
 == Example Build Information
-=== Maven pom.xml
-[source,xml]
-[subs=+attributes]
-.project.pom
-----
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>com.project.group</groupId>
-    <artifactId>project</artifactId>
-    <version>3.0.0</version>
-    <dependencies>
-    </dependencies>
-    <properties>
-        <!-- properties added by buildinfo gradle plugin - start --/>
-        <created-by>1.7.0_80-b15 (Oracle Corporation)</created-by>
-        <build-java-version>1.7.0_80</build-java-version>
-        <java-source-compatibility>1.7.0</java-source-compatibility>
-        <java-target-compatibility>1.7.0</java-target-compatibility>
-        <implementation-version>3.0.0</implementation-version>
-        <build-status>integration</build-status>
-        <built-by>isbldas</built-by>
-        <built-os>Linux</built-os>
-        <build-date>2015-09-21_22:58:51</build-date>
-        <gradle-version>2.6</gradle-version>
-        <module-origin>https://scm.server/projectroot</module-origin>
-        <scm-change-info>e14938d</scm-change-info>
-        <scm-change-time>19700117174747</scm-change-time>
-        <scm-branch-name>e14938df3f85f97065e7b456aef0f14ef669878a</scm-branch-name>
-        <scm-type>git</scm-type>
-        <ci-build-host>buildhost</ci-build-host>
-        <ci-build-url>https://scm.server/projectroot</ci-build-url>
-        <ci-build-number>8</ci-build-number>
-        <ci-build-job>BUILDJOB</ci-build-job>
-        <ci-build-time>2015-09-21T22:56:27.480+02:00</ci-build-time>
-        <!-- properties added by buildinfo gradle plugin - end --/>
-    </properties>
-</project>
-----
 
 === Jar File
 [source,properties]
