@@ -139,10 +139,16 @@ task sourceJar(type: Jar) {
     from sourceSets.main.allSource
 }
 
+configurations {
+    documentation
+}
+
 artifacts {
     archives jar
     archives sourceJar
     archives groovydocJar
+    documentation new File(buildDir, 'asciidoc/html5/README.html')
+    documentation new File(buildDir, 'asciidoc/docbook/README.xml')
 }
 
 publishing {
@@ -203,13 +209,26 @@ publishing {
             // create the signed artifacts
             project.tasks.signArchives.signatureFiles.each {
                 artifact(it) {
-                    def matcher = it.file =~ /-(sources|javadoc)\.jar\.asc$/
+                    def matcher = it.file =~ /-(sources|javadoc)\.(jar)\.asc$/
+                    def ref_matcher = it.file =~ /\.html\.asc$/
+                    def doc_matcher = it.file =~ /\.xml\.asc$/
                     if (matcher.find()) {
                         classifier = matcher.group(1)
+                        extension = "jar.asc"
                     } else {
-                        classifier = null
+                        if(ref_matcher.find()) {
+                            classifier = 'reference'
+                            extension = 'html.asc'
+                        }
+                        else if(doc_matcher.find()) {
+                            classifier = 'docbook'
+                            extension = 'xml.asc'
+                        } else {
+                            classifier = null
+                            extension = 'jar.asc'
+                        }
                     }
-                    extension = 'jar.asc'
+
                 }
             }
         }
@@ -228,7 +247,7 @@ publishing {
 }
 
 signing {
-    sign configurations.archives
+    sign configurations.archives, configurations.documentation
 }
 
 publish.dependsOn asciidoctor
