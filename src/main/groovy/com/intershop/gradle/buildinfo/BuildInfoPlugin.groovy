@@ -17,6 +17,7 @@ package com.intershop.gradle.buildinfo
 
 import com.intershop.gradle.buildinfo.basic.InfoProvider
 import com.intershop.gradle.buildinfo.ci.*
+import com.intershop.gradle.buildinfo.scm.AzureGitScmInfoProvider
 import com.intershop.gradle.buildinfo.scm.GitScmInfoProvider
 import com.intershop.gradle.buildinfo.scm.AbstractScmInfoProvider
 import com.intershop.gradle.buildinfo.scm.SvnScmInfoProvider
@@ -202,7 +203,9 @@ class BuildInfoPlugin implements Plugin<Project> {
      */
     @CompileStatic
     private void initializeProvider(Project project) {
-        if (System.getenv('bamboo_buildResultsUrl')) {
+        if (System.getenv('AZURE_HTTP_USER_AGENT')) {
+            ciProvider = new AzureCIInfoProvider(project.projectDir)
+        } else if (System.getenv('bamboo_buildResultsUrl')) {
             ciProvider = new BambooCIInfoProvider(project.projectDir)
         } else if (System.getenv('JENKINS_URL')) {
             ciProvider = new JenkinsCIInfoProvider(project.projectDir)
@@ -217,9 +220,13 @@ class BuildInfoPlugin implements Plugin<Project> {
         File gitDir = new File(project.rootDir, '.git')
         File svnDir = new File(project.rootDir, '.svn')
         if (gitDir.directory) {
-            scmProvider = new GitScmInfoProvider(project.projectDir)
-            if (System.getenv('bamboo_buildResultsUrl')) {
-                ((GitScmInfoProvider)scmProvider).bambooBuild = true
+            if(System.getenv('AZURE_HTTP_USER_AGENT')) {
+                scmProvider = new AzureGitScmInfoProvider(project.projectDir)
+            } else {
+                scmProvider = new GitScmInfoProvider(project.projectDir)
+                if (System.getenv('bamboo_buildResultsUrl')) {
+                    ((GitScmInfoProvider) scmProvider).bambooBuild = true
+                }
             }
         } else if (svnDir.directory) {
             scmProvider = new SvnScmInfoProvider(project.projectDir)
