@@ -77,7 +77,7 @@ pluginBundle {
     val pluginURL = "https://github.com/IntershopCommunicationsAG/${project.name}"
     website = pluginURL
     vcsUrl = pluginURL
-    tags = listOf("intershop", "gradle", "plugin", "release", "build", "info")
+    tags = listOf("intershop", "release", "build", "info")
 }
 
 java {
@@ -186,7 +186,7 @@ tasks {
 
 publishing {
     publications {
-        create("intershopMvn", MavenPublication::class.java) {
+        create<MavenPublication>("intershopMvn") {
             from(components["java"])
 
             artifact(File(buildDir, "docs/asciidoc/html5/README.html")) {
