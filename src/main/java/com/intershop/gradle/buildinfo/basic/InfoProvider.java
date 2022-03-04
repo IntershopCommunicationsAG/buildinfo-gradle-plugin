@@ -16,7 +16,7 @@
 package com.intershop.gradle.buildinfo.basic;
 
 import org.gradle.api.Project;
-import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.plugins.JavaPluginExtension;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -69,8 +69,8 @@ public class InfoProvider {
      * @return java target compatibility
      */
     public String getJavaTargetCompatibility() {
-        JavaPluginConvention javaConvention = project.getConvention().findPlugin(JavaPluginConvention.class);
-        return javaConvention != null ? javaConvention.getTargetCompatibility().toString() : "";
+        JavaPluginExtension javaPluginExtension = project.getExtensions().findByType(JavaPluginExtension.class);
+        return javaPluginExtension != null ? javaPluginExtension.getTargetCompatibility().toString() : "";
     }
 
     /**
@@ -78,8 +78,8 @@ public class InfoProvider {
      * @return java source compatibility
      */
     public String getJavaSourceCompatibility() {
-        JavaPluginConvention javaConvention = project.getConvention().findPlugin(JavaPluginConvention.class);
-        return javaConvention != null ? javaConvention.getSourceCompatibility().toString() : "";
+        JavaPluginExtension javaPluginExtension = project.getExtensions().findByType(JavaPluginExtension.class);
+        return javaPluginExtension != null ? javaPluginExtension.getSourceCompatibility().toString() : "";
     }
 
     /**

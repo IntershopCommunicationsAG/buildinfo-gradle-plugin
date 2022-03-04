@@ -15,26 +15,17 @@
  */
 package com.intershop.gradle.buildinfo.scm
 
+import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.*
 import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.revwalk.RevWalk
-
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-
 /**
  * This info provider provides the information of the used Git repository.
  */
-class GitScmInfoProvider extends AbstractScmInfoProvider {
-
-    /**
-     * This is a solution for an bamboo build.
-     */
-    boolean bambooBuild = false
+@CompileStatic
+class AzureGitScmInfoProvider extends AbstractScmInfoProvider {
 
     private final Repository gitRepo
 
@@ -47,7 +38,7 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
      * Constructs the Git information provider
      * @param projectDir
      */
-    GitScmInfoProvider(File projectDir) {
+    AzureGitScmInfoProvider(File projectDir) {
         super(projectDir)
 
         gitRepo = new RepositoryBuilder().findGitDir(projectDir).build()
@@ -60,19 +51,7 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
     @Override
     String getSCMOrigin() {
         if(! pOrigin) {
-            if (bambooBuild) {
-                pOrigin = System.getenv('bamboo_planRepository_repositoryUrl')
-            }
-            if (! pOrigin) {
-                Config config = gitRepo.config
-                String rv = config.getString('remote', 'origin', 'url')
-
-                if (rv && rv.startsWith('https://') && rv.contains('@')) {
-                    pOrigin = "https://${rv.substring(rv.indexOf('@') + 1)}"
-                } else {
-                    pOrigin = rv ? rv : UNKNOWN
-                }
-            }
+            pOrigin = System.getenv('BUILD_REPOSITORY_URI')
         }
         return pOrigin
     }
@@ -81,27 +60,11 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
      * Returns branch name of the working copy (read only)
      * @return branch name
      */
+    @CompileDynamic
     @Override
     String getBranchName() {
         if(! pBranchName) {
-            String rv = gitRepo.branch
-
-            Git git = new Git(gitRepo)
-            List<Ref> refList = git.tagList().call()
-
-            refList.any { Ref ref ->
-                Ref peeledRef = gitRepo.getRefDatabase().peel(ref)
-                String hashID = ref.getObjectId()
-                if (peeledRef.getPeeledObjectId() != null) {
-                    hashID = peeledRef.getPeeledObjectId().getName()
-                }
-                if (hashID == rv) {
-                    rv = ref.getName()
-                    return true
-                }
-            }
-
-            pBranchName = rv.split('/').last()
+            pBranchName = System.getenv('BUILD_SOURCEBRANCHNAME')
         }
 
         return pBranchName
@@ -114,13 +77,7 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
     @Override
     String getSCMRevInfo() {
         if(! pRevInfo) {
-            ObjectId id = gitRepo.resolve(Constants.HEAD)
-
-            if (id) {
-                pRevInfo = id.name?.substring(0, 7)
-            } else {
-                pRevInfo = UNKNOWN
-            }
+            pRevInfo = System.getenv('BUILD_SOURCEVERSION').substring(0, 8)
         }
         return pRevInfo
     }
@@ -134,12 +91,7 @@ class GitScmInfoProvider extends AbstractScmInfoProvider {
         if(! getSCMRevInfo().equals('unknown')) {
             RevWalk walk = new RevWalk(gitRepo)
             RevCommit commit = walk.parseCommit(gitRepo.resolve(Constants.HEAD))
-
-            Instant instant = Instant.ofEpochSecond(commit.commitTime);
-            Clock clock = Clock.fixed(instant, ZoneOffset.UTC);
-            ZonedDateTime dateTime = ZonedDateTime.now(clock);
-
-            return dateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+            pChangeTime = new Date( ((long)commit.commitTime)*1000).format("yyyyMMddHHmmss")
         } else {
             pChangeTime = UNKNOWN
         }

@@ -91,6 +91,110 @@ class LocalBuildInfoSpec extends AbstractIntegrationGroovySpec {
         gradleVersion << supportedGradleVersions
     }
 
+    def 'Add BuildInfo to Jars in multi projects'(gradleVersion) {
+
+        String prja = """
+                apply plugin: 'java'
+                apply plugin: 'ivy-publish'
+
+                group = 'com.intershop.testproject'
+                version = rootProject.getVersion()
+
+                publishing {
+                    repositories {
+                        ivy {
+                            // change to point to your repo, e.g. http://my.org/repo
+                            url "\${rootProject.buildDir}/repo"
+                        }
+                    }
+                    publications {
+                        ivya(IvyPublication) {
+                            from components.java
+                        }
+                    }
+                }
+                """.stripIndent()
+        String prjb = """
+                apply plugin: 'java'
+                apply plugin: 'ivy-publish'
+
+                group = 'com.intershop.testproject'
+                version = rootProject.getVersion()
+
+                publishing {
+                    repositories {
+                        ivy {
+                            // change to point to your repo, e.g. http://my.org/repo
+                            url "\${rootProject.buildDir}/repo"
+                        }
+                    }
+                    publications {
+                        ivyb(IvyPublication) {
+                            from components.java
+                        }
+                    }
+                }
+                """.stripIndent()
+
+        File settingsfile = file('settings.gradle')
+        settingsfile << """
+            rootProject.name= 'multiprojecttest'
+        """.stripIndent()
+
+        buildFile << """
+            plugins {
+                id 'java'
+                id 'com.intershop.gradle.buildinfo'
+                id 'ivy-publish'
+            }
+
+            group = 'com.test.root'
+            version = '1.0.0'
+
+            sourceCompatibility = 1.7
+            targetCompatibility = 1.7
+
+            publishing {
+                repositories {
+                    ivy {
+                        // change to point to your repo, e.g. http://my.org/repo
+                        url "\${rootProject.buildDir}/repo"
+                    }
+                }
+                publications {
+                    ivy(IvyPublication) {
+                        from components.java
+                    }
+                }
+            }
+        """.stripIndent()
+
+        createSubProjectJava('project1a', settingsfile, 'com.intereshop.a', prja, '1.0.0')
+        createSubProjectJava('project2b', settingsfile, 'com.intereshop.b', prjb, '1.0.0')
+
+        when:
+        def result = getPreparedGradleRunner()
+                .withArguments('publish', '-PrunOnCI=true', '--stacktrace', '-i')
+                .withGradleVersion(gradleVersion)
+                .build()
+
+        then:
+        (new File(testProjectDir, 'build/repo/com.test.root/multiprojecttest/1.0.0/ivy-1.0.0.xml')).exists()
+        (new File(testProjectDir, 'build/repo/com.intershop.testproject/project1a/1.0.0/ivy-1.0.0.xml')).exists()
+        (new File(testProjectDir, 'build/repo/com.intershop.testproject/project2b/1.0.0/ivy-1.0.0.xml')).exists()
+
+        String ivyFileContentsRoot = new File(testProjectDir,  'build/repo/com.test.root/multiprojecttest/1.0.0/ivy-1.0.0.xml').text
+        String ivyFileContentsA = new File(testProjectDir,  'build/repo/com.intershop.testproject/project1a/1.0.0/ivy-1.0.0.xml').text
+        String ivyFileContentsB = new File(testProjectDir,  'build/repo/com.intershop.testproject/project2b/1.0.0/ivy-1.0.0.xml').text
+
+        1 == ivyFileContentsRoot.count('<e:scm-type>local</e:scm-type>')
+        1 == ivyFileContentsA.count('<e:scm-type>local</e:scm-type>')
+        1 == ivyFileContentsB.count('<e:scm-type>local</e:scm-type>')
+
+        where:
+        gradleVersion << supportedGradleVersions
+    }
+
     def 'Add BuildInfo to Jars in multi projects (Gradle #gradleVersion)'(gradleVersion) {
 
         String prja = """

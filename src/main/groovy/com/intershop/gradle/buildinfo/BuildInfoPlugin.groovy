@@ -17,8 +17,8 @@ package com.intershop.gradle.buildinfo
 
 import com.intershop.gradle.buildinfo.basic.InfoProvider
 import com.intershop.gradle.buildinfo.ci.*
+import com.intershop.gradle.buildinfo.scm.AzureGitScmInfoProvider
 import com.intershop.gradle.buildinfo.scm.GitScmInfoProvider
-
 import com.intershop.gradle.buildinfo.scm.UnknownScmInfoProvider
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -44,12 +44,12 @@ class BuildInfoPlugin implements Plugin<Project> {
     private BuildInfoExtension extension
 
     void apply(Project project) {
+        project.logger.info("Applying ${EXTENSION_NAME} plugin to project: ${project.name}")
+        this.extension = project.extensions.findByType(BuildInfoExtension) ?: project.extensions.create(EXTENSION_NAME, BuildInfoExtension, project)
 
-        this.extension = project.getRootProject().extensions.findByType(BuildInfoExtension) ?: project.getRootProject().extensions.create(EXTENSION_NAME, BuildInfoExtension, project.getRootProject())
         initializeProvider(project)
 
         project.rootProject.plugins.apply(BuildInfoProjectPlugin.class)
-
         project.rootProject.subprojects(new Action<Project>() {
             @Override
             void execute(Project p) {
@@ -64,8 +64,9 @@ class BuildInfoPlugin implements Plugin<Project> {
      * @param project
      */
     private void initializeProvider(Project project) {
-
-        if (System.getenv('bamboo_buildResultsUrl')) {
+        if (System.getenv('AZURE_HTTP_USER_AGENT')) {
+            extension.ciProvider = new AzureCIInfoProvider(project.projectDir)
+        } else if (System.getenv('bamboo_buildResultsUrl')) {
             extension.ciProvider = new BambooCIInfoProvider(project.projectDir)
         } else if (System.getenv('JENKINS_URL')) {
             extension.ciProvider = new JenkinsCIInfoProvider(project.projectDir)
@@ -78,16 +79,20 @@ class BuildInfoPlugin implements Plugin<Project> {
         }
 
         File gitDir = new File(project.rootDir, '.git')
-
         if (gitDir.directory) {
-            extension.scmProvider = new GitScmInfoProvider(project.projectDir)
-            if (System.getenv('bamboo_buildResultsUrl')) {
-                ((GitScmInfoProvider) extension.scmProvider).bambooBuild = true
+            if(System.getenv('AZURE_HTTP_USER_AGENT')) {
+                extension.scmProvider = new AzureGitScmInfoProvider(project.projectDir)
+            } else {
+                extension.scmProvider = new GitScmInfoProvider(project.projectDir)
+                if (System.getenv('bamboo_buildResultsUrl')) {
+                    ((GitScmInfoProvider) extension.scmProvider).bambooBuild = true
+                }
             }
         } else {
             extension.scmProvider = new UnknownScmInfoProvider(project.projectDir)
         }
 
         extension.infoProvider = new InfoProvider(project)
+        System.out.println("Info provider initialized .....")
     }
 }

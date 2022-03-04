@@ -32,6 +32,9 @@ class BuildInfoExtension {
     public final static String ADDJARINFO_ENV = 'ADDITIONALJARINFO'
     public final static String ADDJARINFO_PRJ = 'additionalJarInfo'
 
+    public final static String NODESCRIPTORINFO_ENV = 'NODESCRIPTORINFO'
+    public final static String NODESCRIPTORINFO_PRJ = 'noDescriptorInfo'
+
     final private Project project
 
     BuildInfoExtension(Project project) {
@@ -41,6 +44,11 @@ class BuildInfoExtension {
         additionalJarInfo = Boolean.parseBoolean(getVariable(ADDJARINFO_ENV, ADDJARINFO_PRJ, 'false'))
         if(additionalJarInfo) {
             log.info('Additional information will be attached to jar files of {}.', project.name)
+        }
+
+        noDescriptorInfo = Boolean.parseBoolean(getVariable(NODESCRIPTORINFO_ENV, NODESCRIPTORINFO_PRJ, 'false'))
+        if(noDescriptorInfo) {
+            log.info('No information will be attached to descriptor files of {}.', project.name)
         }
     }
 
@@ -52,6 +60,13 @@ class BuildInfoExtension {
      */
     boolean additionalJarInfo
 
+    /**
+     * <p>Configuration for the execution on the CI server without stored infomation in descriptor files (ivy,pom)</p>
+     *
+     * <p>Can be configured/overwritten with environment variable NODESCRIPTORINFO;
+     * java environment NODESCRIPTORINFO or project variable noDescriptorInfo</p>
+     */
+    boolean noDescriptorInfo
 
     /**
      * The name of the vendor.
