@@ -41,7 +41,7 @@ plugins {
     id("org.asciidoctor.jvm.convert") version "3.3.2"
 
     // plugin for publishing to Gradle Portal
-    id("com.gradle.plugin-publish") version "0.20.0"
+    id("com.gradle.plugin-publish") version "1.0.0"
 }
 
 scm {
@@ -100,7 +100,7 @@ if (project.version.toString().endsWith("-SNAPSHOT")) {
 
 tasks {
     withType<Test>().configureEach {
-        systemProperty("intershop.gradle.versions", "7.4")
+        systemProperty("intershop.gradle.versions", "7.2,7.5.1")
         systemProperty("org.gradle.native.dir", ".gradle")
 
         if(! System.getenv("GITUSER").isNullOrBlank() &&
@@ -246,7 +246,7 @@ signing {
 
 dependencies {
     //jgit
-    implementation("org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r") {
+    implementation("org.eclipse.jgit:org.eclipse.jgit:6.3.0.202209071007-r") {
         exclude(group = "org.apache.httpcomponents", module = "httpclient")
         exclude(group = "org.slf4j", module = "slf4j-api")
     }
@@ -254,7 +254,7 @@ dependencies {
     runtimeOnly("org.apache.httpcomponents:httpclient:4.5.5")
     runtimeOnly("org.slf4j:slf4j-api:1.7.16")
 
-    testImplementation("com.intershop.gradle.test:test-gradle-plugin:4.1.1")
+    testImplementation("com.intershop.gradle.test:test-gradle-plugin:4.1.2")
     testImplementation(gradleTestKit())
 }
 
