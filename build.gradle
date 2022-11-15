@@ -92,16 +92,10 @@ task sourceJar(type: Jar) {
     from sourceSets.main.allSource
 }
 
-configurations {
-    documentation
-}
-
 artifacts {
     archives jar
     archives sourceJar
     archives groovydocJar
-    documentation new File(buildDir, 'asciidoc/html5/README.html')
-    documentation new File(buildDir, 'asciidoc/docbook/README.xml')
 }
 
 publishing {
@@ -192,10 +186,8 @@ publishing {
 }
 
 signing {
-    sign configurations.archives, configurations.documentation
+    sign configurations.archives
 }
-
-publish.dependsOn asciidoctor
 
 pluginBundle {
     website = "https://github.com/IntershopCommunicationsAG/${project.name}"
