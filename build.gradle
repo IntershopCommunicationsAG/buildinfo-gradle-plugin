@@ -24,7 +24,7 @@ plugins {
     id 'com.intershop.gradle.scmversion' version '2.3.4'
 
     // plugin for publishing to Gradle Portal
-    id 'com.gradle.plugin-publish' version '0.15.0'
+    id 'com.gradle.plugin-publish' version '0.10.0'
 }
 
 scm {
@@ -38,8 +38,8 @@ group 'com.intershop.gradle.buildinfo'
 description 'Gradle Buildinfo Plugin'
 version = scm.version.version
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 // set correct project status
 if (project.version.endsWith('-SNAPSHOT')) {
