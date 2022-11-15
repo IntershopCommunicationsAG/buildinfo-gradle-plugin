@@ -11,9 +11,6 @@ plugins {
     // intershop test plugin
     id 'com.intershop.gradle.test' version '2.2.0'
 
-    // plugin for documentation
-    id 'org.asciidoctor.convert' version '1.6.1'
-
     // publish plugin
     id 'maven-publish'
 
@@ -77,50 +74,6 @@ test {
     systemProperty 'intershop.gradle.versions', '2.11'
 }
 
-task copyAsciiDoc {
-    def outputDir = file("$buildDir/tmp/asciidoctorSrc")
-    def inputFiles = fileTree(dir: rootDir, include: '**/*.asciidoc')
-
-    inputs.files inputFiles
-    outputs.dir outputDir
-
-    doLast {
-        outputDir.mkdirs()
-
-        copy {
-            from inputFiles
-            into outputDir
-        }
-    }
-}
-
-asciidoctorj {
-    noDefaultRepositories = true
-}
-
-asciidoctor {
-    sourceDir "${buildDir}/tmp/asciidoctorSrc"
-    sources {
-        include 'README.asciidoc'
-    }
-
-    backends 'html5', 'docbook'
-    options doctype : 'article',
-            ruby    : 'erubis'
-    attributes  'latestRevision'     : project.version,
-            'toc':'left',
-            'toclevels':'2',
-            'source-highlighter' : 'coderay',
-            'icons': 'font',
-            'setanchors':'true',
-            'idprefix':'asciidoc_',
-            'idseparator':'-',
-            'docinfo1':'true'
-}
-
-asciidoctor.dependsOn copyAsciiDoc
-jar.dependsOn asciidoctor
-
 jacocoTestReport {
     reports {
         xml.enabled = true // coveralls plugin depends on xml format report
@@ -162,14 +115,6 @@ publishing {
 
             artifact groovydocJar {
                 classifier "javadoc"
-            }
-
-            artifact(new File(buildDir, 'asciidoc/html5/README.html')) {
-                classifier 'reference'
-            }
-
-            artifact(new File(buildDir, 'asciidoc/docbook/README.xml')) {
-                classifier = 'docbook'
             }
 
             pom.withXml {
